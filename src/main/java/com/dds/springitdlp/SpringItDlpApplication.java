@@ -1,4 +1,4 @@
-package G03.springitdlp;
+package com.dds.springitdlp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package G03.springitdlp;
+package com.dds.springitdlp;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
