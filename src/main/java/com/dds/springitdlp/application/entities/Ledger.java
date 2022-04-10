@@ -1,6 +1,5 @@
 package com.dds.springitdlp.application.entities;
 
-import lombok.Data;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -11,7 +10,7 @@ import java.util.Map;
 
 public class Ledger implements Serializable {
     @Getter
-    private Map<Account, List<Transaction>> map;
+    private final Map<Account, List<Transaction>> map;
 
     public Ledger() {
         map = new HashMap<>();

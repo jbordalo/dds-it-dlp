@@ -3,14 +3,15 @@ package com.dds.springitdlp.application.services;
 import bftsmart.tom.ServiceProxy;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Component
 public class LedgerClient {
-
     ServiceProxy serviceProxy;
     Logger logger;
 

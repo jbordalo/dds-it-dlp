@@ -5,25 +5,28 @@ import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class LedgerServer extends DefaultSingleRecoverable {
+@Component
+public class LedgerServer extends DefaultSingleRecoverable implements CommandLineRunner {
     private final Logger logger;
     private Ledger ledger;
 
     public LedgerServer() {
         logger = Logger.getLogger(LedgerServer.class.getName());
-        int id = Integer.parseInt(System.getenv().get("REPLICA_ID"));
         ledger = new Ledger();
-        new ServiceReplica(id, this, this);
     }
 
-    public static void main(String[] args) {
-        new LedgerServer();
+    @Override
+    public void run(String... args) throws Exception {
+        int id = Integer.parseInt(System.getenv().get("REPLICA_ID"));
+        new ServiceReplica(id, this, this);
     }
 
     @Override
@@ -54,12 +57,12 @@ public class LedgerServer extends DefaultSingleRecoverable {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bis)) {
             Transaction transaction = (Transaction) ois.readObject();
             logger.log(Level.INFO, transaction.toString());
-            //add to map
-            //process transaction
+            // add to map
+            // process transaction
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        //TODO
+        // TODO
         return "transaction completed".getBytes(StandardCharsets.UTF_8);
     }
 
@@ -67,10 +70,12 @@ public class LedgerServer extends DefaultSingleRecoverable {
     public byte[] appExecuteUnordered(byte[] bytes, MessageContext messageContext) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(ledger);
+            logger.log(Level.INFO, "sending ledger");
             return bos.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
     }
+
 }
