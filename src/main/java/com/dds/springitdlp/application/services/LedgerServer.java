@@ -44,7 +44,7 @@ public class LedgerServer extends DefaultSingleRecoverable {
     public byte[] appExecuteUnordered(byte[] bytes, MessageContext messageContext) {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bis)) {
             Transaction transaction = (Transaction) ois.readObject();
-            System.out.println(transaction);
+            logger.log(Level.INFO, transaction.toString());
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }

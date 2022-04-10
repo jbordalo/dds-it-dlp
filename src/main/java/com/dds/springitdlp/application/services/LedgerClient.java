@@ -5,6 +5,7 @@ import com.dds.springitdlp.application.entities.Transaction;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
@@ -28,8 +29,8 @@ public class LedgerClient {
             bts = serviceProxy.invokeUnordered(bts);
             String s = new String(bts, StandardCharsets.UTF_8);
             logger.log(Level.INFO, s);
-        } catch(Exception e) {
-            System.exit(1);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }
