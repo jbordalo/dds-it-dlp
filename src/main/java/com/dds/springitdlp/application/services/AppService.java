@@ -10,19 +10,16 @@ import java.util.Random;
 @Service
 public class AppService {
     private final Storage storage;
-    private LedgerServer ledgerServer;
     private LedgerClient ledgerClient;
 
     @Autowired
     public AppService(Storage storage) {
         this.storage = storage;
-        Random r = new Random();
-        int id = r.nextInt();
-        //this.ledgerClient = new LedgerClient(id);
-        this.ledgerServer = new LedgerServer(id);
+        this.ledgerClient = new LedgerClient();
     }
 
     public int sendTransaction(Transaction transaction) {
+        ledgerClient.sendTransaction(transaction);
         return 0;
     }
 }
