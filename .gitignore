@@ -4,3 +4,4 @@
 *.class
 /out
 /build
+config/currentView
