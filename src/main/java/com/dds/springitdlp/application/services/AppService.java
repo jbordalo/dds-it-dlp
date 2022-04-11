@@ -23,7 +23,7 @@ public class AppService {
     }
 
     public double getBalance(String accountId) {
-        return 1.0;
+        return this.ledgerClient.getBalance(accountId);
     }
 
     public List<Transaction> getExtract(String accountId) {
