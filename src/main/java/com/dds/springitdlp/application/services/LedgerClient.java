@@ -65,4 +65,8 @@ public class LedgerClient {
         }
         return 1.0;
     }
+
+    public double getGlobalLedgerValue() {
+        return 1.0;
+    }
 }

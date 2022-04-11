@@ -34,9 +34,11 @@ public class AppService {
         return this.ledgerClient.getTotalValue(accounts);
     }
 
+    public double getGlobalLedgerValue() {
+        return this.ledgerClient.getGlobalLedgerValue();
+    }
+
     public Ledger getLedger() {
         return this.ledgerClient.getLedger();
     }
-
-
 }

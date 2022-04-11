@@ -39,6 +39,11 @@ public class Controller {
         return this.service.getTotalValue(accounts);
     }
 
+    @GetMapping("/globalLedgerValue")
+    public double getTotalValue() {
+        return this.service.getGlobalLedgerValue();
+    }
+
     @GetMapping("/ledger")
     public Ledger getLedger() {
         return service.getLedger();
