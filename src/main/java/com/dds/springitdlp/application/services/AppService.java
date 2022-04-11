@@ -30,6 +30,10 @@ public class AppService {
         return this.ledgerClient.getExtract(accountId);
     }
 
+    public double getTotalValue(List<String> accounts) {
+        return this.ledgerClient.getTotalValue(accounts);
+    }
+
     public Ledger getLedger() {
         return this.ledgerClient.getLedger();
     }

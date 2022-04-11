@@ -58,4 +58,11 @@ public class LedgerClient {
         extract.add(new Transaction("orig", "dest", 1.0));
         return extract;
     }
+
+    public double getTotalValue(List<String> accounts) {
+        for (String a: accounts) {
+            logger.log(Level.INFO, a);
+        }
+        return 1.0;
+    }
 }

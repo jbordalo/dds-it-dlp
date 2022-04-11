@@ -34,7 +34,11 @@ public class Controller {
         return this.service.getExtract(accountId);
     }
 
-    @GetMapping("/getLedger")
+    @GetMapping("/totalValue")
+    public double getTotalValue(@RequestBody List<String> accounts) {
+        return this.service.getTotalValue(accounts);
+    }
+
     @GetMapping("/ledger")
     public Ledger getLedger() {
         return service.getLedger();
