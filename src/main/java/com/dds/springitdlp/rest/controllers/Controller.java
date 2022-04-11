@@ -16,14 +16,21 @@ public class Controller {
         this.service = service;
     }
 
+
     @PostMapping("/sendTransaction")
     public int sendTransaction(@RequestBody Transaction transaction) {
         return service.sendTransaction(transaction);
+    }
+
+    @GetMapping("/balance/{accountId}")
+    public double getBalance(@PathVariable String accountId) {
+        return this.service.getBalance(accountId);
     }
 
     @GetMapping("/getLedger")
     public Ledger getLedger() {
         return service.getLedger();
     }
+
 
 }

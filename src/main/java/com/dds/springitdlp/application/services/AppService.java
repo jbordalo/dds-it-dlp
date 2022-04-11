@@ -15,12 +15,17 @@ public class AppService {
     }
 
     public int sendTransaction(Transaction transaction) {
-        ledgerClient.sendTransaction(transaction);
+        this.ledgerClient.sendTransaction(transaction);
         // TODO
         return 0;
     }
 
-    public Ledger getLedger() {
-        return ledgerClient.getLedger();
+    public double getBalance(String accountId) {
+        return this.ledgerClient.getBalance(accountId);
     }
+
+    public Ledger getLedger() {
+        return this.ledgerClient.getLedger();
+    }
+
 }

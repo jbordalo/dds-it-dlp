@@ -44,4 +44,9 @@ public class LedgerClient {
         }
         return null;
     }
+
+    public double getBalance(String accountId) {
+        byte[] bytes = serviceProxy.invokeUnordered(null);
+        return 1.0;
+    }
 }
