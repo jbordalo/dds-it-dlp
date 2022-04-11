@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,5 +50,12 @@ public class LedgerClient {
     public double getBalance(String accountId) {
         byte[] bytes = serviceProxy.invokeUnordered(null);
         return 1.0;
+    }
+
+    public List<Transaction> getExtract(String accountId) {
+        byte[] bytes = serviceProxy.invokeUnordered(null);
+        List<Transaction> extract = new LinkedList<Transaction>();
+        extract.add(new Transaction("orig", "dest", 1.0));
+        return extract;
     }
 }

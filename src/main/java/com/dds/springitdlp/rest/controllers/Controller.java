@@ -6,6 +6,8 @@ import com.dds.springitdlp.application.services.AppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/")
 public class Controller {
@@ -27,10 +29,14 @@ public class Controller {
         return this.service.getBalance(accountId);
     }
 
+    @GetMapping("/extract/{accountId}")
+    public List<Transaction> getExtract(@PathVariable String accountId) {
+        return this.service.getExtract(accountId);
+    }
+
     @GetMapping("/getLedger")
     public Ledger getLedger() {
         return service.getLedger();
     }
-
 
 }
