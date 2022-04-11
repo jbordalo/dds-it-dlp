@@ -35,6 +35,7 @@ public class Controller {
     }
 
     @GetMapping("/getLedger")
+    @GetMapping("/ledger")
     public Ledger getLedger() {
         return service.getLedger();
     }
