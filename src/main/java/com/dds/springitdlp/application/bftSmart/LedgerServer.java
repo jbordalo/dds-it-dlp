@@ -111,7 +111,9 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
                 case GET_TOTAL_VALUE -> {
                     return this.getTotalValue(objIn);
                 }
-//                case GET_GLOBAL_LEDGER_VALUE -> this.getGlobalLedgerValue();
+                case GET_GLOBAL_LEDGER_VALUE -> {
+                    return this.getGlobalLedgerValue();
+                }
                 default -> {
                     return null;
                 }
@@ -120,6 +122,18 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    private byte[] getGlobalLedgerValue() {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeDouble(getTotal(this.ledger.getMap().keySet().stream().toList()));
+            oos.flush();
+            this.logger.log(Level.INFO, "getGlobalLedgerValue@Server");
+            return bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -142,12 +156,7 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
     private byte[] getTotalValue(ObjectInput objectInput) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             List<Account> list = (List<Account>) objectInput.readObject();
-            double total = 0.0d;
-            for (Account a : list) {
-                double temp = this.ledger.getBalance(a);
-                total += temp >= 0.0d ? temp : 0.0d;
-            }
-            oos.writeDouble(total);
+            oos.writeDouble(getTotal(list));
             oos.flush();
             this.logger.log(Level.INFO, "getTotalValue@Server: sending total value of the given list");
             return bos.toByteArray();
@@ -157,6 +166,14 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
             throw new RuntimeException(e);
         }
         return null;
+    }
+
+    private double getTotal(List<Account> list) {
+        double total = 0.0;
+        for (Account a : list) {
+            total += Math.max(this.ledger.getBalance(a), 0.0);
+        }
+        return total;
     }
 
 }

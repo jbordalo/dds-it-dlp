@@ -141,6 +141,23 @@ public class LedgerClient {
     }
 
     public double getGlobalLedgerValue() {
-        return 1.0;
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+
+            objOut.writeObject(LedgerRequestType.GET_GLOBAL_LEDGER_VALUE);
+
+            objOut.flush();
+            byteOut.flush();
+
+            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                return objIn.readDouble();
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "error while calculating global value", e);
+        }
+        return -1.0;
     }
 }
