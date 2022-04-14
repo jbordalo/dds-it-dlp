@@ -4,7 +4,9 @@ import bftsmart.tom.ServiceProxy;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -24,12 +26,15 @@ public class LedgerClient {
         serviceProxy = new ServiceProxy(id);
     }
 
-    public void sendTransaction(Transaction transaction) {
+    public void sendTransaction(Transaction transaction) throws ResponseStatusException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(transaction);
             byte[] bts = bos.toByteArray();
-            serviceProxy.invokeOrdered(bts);
+            byte [] reply = serviceProxy.invokeOrdered(bts);
             logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+
+            if (reply != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,7 +54,7 @@ public class LedgerClient {
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
                 return (Ledger) objIn.readObject();
-        }
+            }
         } catch (IOException | ClassNotFoundException e) {
             logger.log(Level.SEVERE, "error while retrieving ledger", e);
         }

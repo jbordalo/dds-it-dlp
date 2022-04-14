@@ -28,8 +28,8 @@ public class Ledger implements Serializable {
         return balance;
     }
 
-    public void sendTransaction(Transaction transaction) throws ResponseStatusException {
-        if (transaction.getAmount() <= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+    public int sendTransaction(Transaction transaction) {
+        if (transaction.getAmount() <= 0) return 1;
 
         Account origin = transaction.getOrigin();
         Account destination = transaction.getDestination();
@@ -41,7 +41,7 @@ public class Ledger implements Serializable {
             this.map.put(origin, originList);
         }
 
-        if (this.getBalance(origin) < transaction.getAmount()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        if (this.getBalance(origin) < transaction.getAmount()) return 1;
 
         List<Transaction> destinationList = this.map.get(destination);
         if (destinationList == null) {
@@ -52,5 +52,7 @@ public class Ledger implements Serializable {
         destinationList.add(transaction);
 
         originList.add(new Transaction(origin, destination, -transaction.getAmount()));
+
+        return 0;
     }
 }

@@ -8,6 +8,7 @@ import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -57,10 +58,9 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
     public byte[] appExecuteOrdered(byte[] bytes, MessageContext messageContext) {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bis)) {
             Transaction transaction = (Transaction) ois.readObject();
-            logger.log(Level.INFO, "sendTransaction@Server: transaction.toString()");
-            // add to map
-            ledger.sendTransaction(transaction);
-            // process transaction
+            this.logger.log(Level.INFO, "sendTransaction@Server: transaction.toString()");
+
+            return this.ledger.sendTransaction(transaction) == 0 ? null : new byte[0];
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -71,7 +71,6 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(this.ledger);
             this.logger.log(Level.INFO, "getLedger@Server: sending ledger");
-            logger.log(Level.INFO, String.valueOf(ledger == null));
             return bos.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
