@@ -22,6 +22,9 @@ public class Ledger implements Serializable {
     public double getBalance(Account account) {
         double balance = 0;
         List<Transaction> transactions = this.map.get(account);
+
+        if (transactions == null) return -1.0;
+
         for (Transaction transaction : transactions) {
             balance += transaction.getAmount();
         }

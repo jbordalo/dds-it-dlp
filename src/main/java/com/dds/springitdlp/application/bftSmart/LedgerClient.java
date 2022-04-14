@@ -61,9 +61,30 @@ public class LedgerClient {
         return null;
     }
 
-    public double getBalance(Account account) {
-        byte[] bytes = serviceProxy.invokeUnordered(null);
-        return 1.0;
+    public double getBalance(Account account) throws ResponseStatusException {
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+
+            objOut.writeObject(LedgerRequestType.GET_BALANCE);
+            objOut.writeObject(account);
+
+            objOut.flush();
+            byteOut.flush();
+
+            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                double balance = objIn.readDouble();
+
+                if (balance == -1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
+                return balance;
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "error while calculating balance", e);
+        }
+        return -1.0;
     }
 
     public List<Transaction> getExtract(Account account) {
