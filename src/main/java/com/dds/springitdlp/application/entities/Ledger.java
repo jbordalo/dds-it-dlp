@@ -29,6 +29,7 @@ public class Ledger implements Serializable {
     }
 
     public void sendTransaction(Transaction transaction) throws ResponseStatusException {
+        if (transaction.getAmount() <= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
         Account origin = transaction.getOrigin();
         Account destination = transaction.getDestination();
