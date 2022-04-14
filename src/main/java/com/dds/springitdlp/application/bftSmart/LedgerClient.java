@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.*;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -87,9 +86,29 @@ public class LedgerClient {
     }
 
     public List<Transaction> getExtract(Account account) {
-        byte[] bytes = serviceProxy.invokeUnordered(null);
-        List<Transaction> extract = new LinkedList<Transaction>();
-        return extract;
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+
+            objOut.writeObject(LedgerRequestType.GET_EXTRACT);
+            objOut.writeObject(account);
+
+            objOut.flush();
+            byteOut.flush();
+
+            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                List<Transaction> extract = (List<Transaction>) objIn.readObject();
+                //TODO - acc doesn't exist if there are no transactions
+                if (extract == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
+                return extract;
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            logger.log(Level.SEVERE, "error while fetching extract for account: " + account.getAccountId(), e);
+        }
+        return null;
     }
 
     public double getTotalValue(List<Account> accounts) {

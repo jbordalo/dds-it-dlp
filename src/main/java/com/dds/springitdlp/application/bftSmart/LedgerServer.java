@@ -105,7 +105,9 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
                 case GET_BALANCE -> {
                     return this.getBalance(objIn);
                 }
-//                case GET_EXTRACT -> this.getExtract();
+                case GET_EXTRACT -> {
+                    return this.getExtract(objIn);
+                }
                 case GET_TOTAL_VALUE -> {
                     return this.getTotalValue(objIn);
                 }
@@ -114,6 +116,21 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
                     return null;
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    private byte[] getExtract(ObjectInput objectInput) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            Account account = (Account) objectInput.readObject();
+            oos.writeObject(this.ledger.getExtract(account));
+            oos.flush();
+            this.logger.log(Level.INFO, "getExtract@Server: fetching extract of " + account.getAccountId());
+            return bos.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {

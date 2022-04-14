@@ -56,4 +56,8 @@ public class Ledger implements Serializable {
 
         return 0;
     }
+
+    public List<Transaction> getExtract(Account account) {
+        return this.map.get(account);
+    }
 }
