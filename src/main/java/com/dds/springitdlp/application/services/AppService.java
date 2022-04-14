@@ -19,10 +19,8 @@ public class AppService {
         this.ledgerClient = ledgerClient;
     }
 
-    public int sendTransaction(Transaction transaction) {
+    public void sendTransaction(Transaction transaction) {
         this.ledgerClient.sendTransaction(transaction);
-        // TODO
-        return 0;
     }
 
     public double getBalance(String accountId) {
