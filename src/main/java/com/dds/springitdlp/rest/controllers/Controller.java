@@ -1,5 +1,6 @@
 package com.dds.springitdlp.rest.controllers;
 
+import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.services.AppService;
@@ -18,7 +19,6 @@ public class Controller {
         this.service = service;
     }
 
-
     @PostMapping("/sendTransaction")
     public int sendTransaction(@RequestBody Transaction transaction) {
         return service.sendTransaction(transaction);
@@ -35,8 +35,9 @@ public class Controller {
     }
 
     @GetMapping("/totalValue")
-    public double getTotalValue(@RequestBody List<String> accounts) {
-        return this.service.getTotalValue(accounts);
+    public Transaction getTotalValue(@RequestBody List<String> accounts) {
+        return new Transaction(new Account("."), new Account("."), 10.0);
+//        return this.service.getTotalValue(accounts);
     }
 
     @GetMapping("/globalLedgerValue")
