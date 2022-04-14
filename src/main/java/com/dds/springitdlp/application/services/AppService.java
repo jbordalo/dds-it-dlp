@@ -1,5 +1,6 @@
 package com.dds.springitdlp.application.services;
 
+import com.dds.springitdlp.application.bftSmart.LedgerClient;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;

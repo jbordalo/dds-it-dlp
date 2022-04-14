@@ -1,4 +1,4 @@
-package com.dds.springitdlp.application.services;
+package com.dds.springitdlp.application.bftSmart;
 
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;

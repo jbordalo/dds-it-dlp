@@ -1,4 +1,4 @@
-package com.dds.springitdlp.application.services;
+package com.dds.springitdlp.application.bftSmart;
 
 import bftsmart.tom.ServiceProxy;
 import com.dds.springitdlp.application.entities.Ledger;
