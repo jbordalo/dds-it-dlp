@@ -33,7 +33,7 @@ public class AppService {
 
     public double getTotalValue(List<String> accounts) {
         List<Account> accountsFinal = new LinkedList<>();
-        for (String account: accounts) {
+        for (String account : accounts) {
             accountsFinal.add(new Account(account));
         }
         return this.ledgerClient.getTotalValue(accountsFinal);

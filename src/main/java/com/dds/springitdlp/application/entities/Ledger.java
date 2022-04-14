@@ -1,8 +1,6 @@
 package com.dds.springitdlp.application.entities;
 
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.Serializable;
 import java.util.HashMap;

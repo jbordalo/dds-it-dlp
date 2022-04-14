@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -30,7 +29,7 @@ public class LedgerClient {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(transaction);
             byte[] bts = bos.toByteArray();
-            byte [] reply = serviceProxy.invokeOrdered(bts);
+            byte[] reply = serviceProxy.invokeOrdered(bts);
             logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
 
             if (reply != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -94,10 +93,32 @@ public class LedgerClient {
     }
 
     public double getTotalValue(List<Account> accounts) {
-        for (Account a: accounts) {
+        for (Account a : accounts) {
             logger.log(Level.INFO, a.toString());
         }
-        return 1.0;
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+
+            objOut.writeObject(LedgerRequestType.GET_TOTAL_VALUE);
+            objOut.writeObject(accounts);
+
+            objOut.flush();
+            byteOut.flush();
+
+            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                double totalValue = objIn.readDouble();
+
+                if (totalValue == -1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
+                return totalValue;
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "error while calculating balance", e);
+        }
+        return -1.0;
     }
 
     public double getGlobalLedgerValue() {
