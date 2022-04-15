@@ -18,10 +18,9 @@ public class Controller {
         this.service = service;
     }
 
-
     @PostMapping("/sendTransaction")
-    public int sendTransaction(@RequestBody Transaction transaction) {
-        return service.sendTransaction(transaction);
+    public void sendTransaction(@RequestBody Transaction transaction) {
+        this.service.sendTransaction(transaction);
     }
 
     @GetMapping("/balance/{accountId}")

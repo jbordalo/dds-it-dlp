@@ -1,10 +1,13 @@
 package com.dds.springitdlp.application.services;
 
+import com.dds.springitdlp.application.bftSmart.LedgerClient;
+import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @Service
@@ -16,22 +19,24 @@ public class AppService {
         this.ledgerClient = ledgerClient;
     }
 
-    public int sendTransaction(Transaction transaction) {
+    public void sendTransaction(Transaction transaction) {
         this.ledgerClient.sendTransaction(transaction);
-        // TODO
-        return 0;
     }
 
     public double getBalance(String accountId) {
-        return this.ledgerClient.getBalance(accountId);
+        return this.ledgerClient.getBalance(new Account(accountId));
     }
 
     public List<Transaction> getExtract(String accountId) {
-        return this.ledgerClient.getExtract(accountId);
+        return this.ledgerClient.getExtract(new Account(accountId));
     }
 
     public double getTotalValue(List<String> accounts) {
-        return this.ledgerClient.getTotalValue(accounts);
+        List<Account> accountsFinal = new LinkedList<>();
+        for (String account : accounts) {
+            accountsFinal.add(new Account(account));
+        }
+        return this.ledgerClient.getTotalValue(accountsFinal);
     }
 
     public double getGlobalLedgerValue() {
