@@ -42,7 +42,6 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
         return new byte[0];
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void installSnapshot(byte[] state) {
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(state);
