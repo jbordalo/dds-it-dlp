@@ -153,6 +153,7 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     private byte[] getTotalValue(ObjectInput objectInput) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             List<Account> list = (List<Account>) objectInput.readObject();
