@@ -65,7 +65,7 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
         return null;
     }
 
-    public byte[] getLedger() {
+    private byte[] getLedger() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(this.ledger);
             this.logger.log(Level.INFO, "getLedger@Server: sending ledger");
@@ -76,7 +76,7 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
         return null;
     }
 
-    public byte[] getBalance(ObjectInput objectInput) {
+    private byte[] getBalance(ObjectInput objectInput) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             Account account = (Account) objectInput.readObject();
             oos.writeDouble(this.ledger.getBalance(account));
