@@ -85,6 +85,7 @@ public class LedgerClient {
         return -1.0;
     }
 
+    @SuppressWarnings("unchecked")
     public List<Transaction> getExtract(Account account) {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
