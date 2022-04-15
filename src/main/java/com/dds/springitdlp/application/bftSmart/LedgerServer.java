@@ -56,7 +56,7 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
     public byte[] appExecuteOrdered(byte[] bytes, MessageContext messageContext) {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bis)) {
             Transaction transaction = (Transaction) ois.readObject();
-            this.logger.log(Level.INFO, "sendTransaction@Server: transaction.toString()");
+            this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
 
             return this.ledger.sendTransaction(transaction) == 0 ? null : new byte[0];
         } catch (IOException | ClassNotFoundException e) {
