@@ -34,10 +34,10 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
     public byte[] getSnapshot() {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
-            objOut.writeObject(ledger);
+            objOut.writeObject(this.ledger);
             return byteOut.toByteArray();
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "error while taking snapshot", e);
+            this.logger.log(Level.SEVERE, "error while taking snapshot", e);
         }
         return new byte[0];
     }
@@ -46,9 +46,9 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
     public void installSnapshot(byte[] state) {
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(state);
              ObjectInput objIn = new ObjectInputStream(byteIn)) {
-            ledger = (Ledger) objIn.readObject();
+            this.ledger = (Ledger) objIn.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "error while installing snapshot", e);
+            this.logger.log(Level.SEVERE, "error while installing snapshot", e);
         }
     }
 
@@ -127,7 +127,7 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
 
     private byte[] getGlobalLedgerValue() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeDouble(getTotal(this.ledger.getMap().keySet().stream().toList()));
+            oos.writeDouble(this.getTotal(this.ledger.getMap().keySet().stream().toList()));
             oos.flush();
             this.logger.log(Level.INFO, "getGlobalLedgerValue@Server");
             return bos.toByteArray();
@@ -156,7 +156,7 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
     private byte[] getTotalValue(ObjectInput objectInput) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             List<Account> list = (List<Account>) objectInput.readObject();
-            oos.writeDouble(getTotal(list));
+            oos.writeDouble(this.getTotal(list));
             oos.flush();
             this.logger.log(Level.INFO, "getTotalValue@Server: sending total value of the given list");
             return bos.toByteArray();
