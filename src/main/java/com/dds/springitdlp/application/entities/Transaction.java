@@ -1,12 +1,15 @@
 package com.dds.springitdlp.application.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Transaction implements Serializable {
 
     public static final double INITIAL_VALUE = 100.0;

@@ -2,16 +2,18 @@ package com.dds.springitdlp.application.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Account implements Serializable {
     public final static String SYSTEM = "GOD";
-    private final String accountId;
-    private final String ownerId;
+    private  String accountId;
+    private  String ownerId;
 
     public Account(String accountId) {
         this.accountId = accountId;
