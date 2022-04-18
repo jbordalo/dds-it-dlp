@@ -21,18 +21,25 @@ public class Interceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
-        String digitalSignature = request.getHeader("digitalSignature");
 
-        String raw = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        String date = request.getHeader("Date");
+        String keyId = request.getHeader("keyId");
+        String algorithm = request.getHeader("algorithm");
+
+        String digitalSignature = request.getHeader("signature");
+
+//        String raw = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+
+        String signedContent = date + keyId + algorithm;
 
         try {
-            Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
+            Signature signature = Signature.getInstance(algorithm, "BC");
 
-            Transaction trans = new ObjectMapper().readValue(raw, Transaction.class);
+//            Transaction trans = new ObjectMapper().readValue(raw, Transaction.class);
+//
+//            String publicKeyPEM = trans.getOrigin().getAccountId();
 
-            String publicKeyPEM = trans.getOrigin().getAccountId();
-
-            byte[] encoded = Base64.decodeBase64(publicKeyPEM);
+            byte[] encoded = Base64.decodeBase64(keyId);
 
             KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
@@ -40,7 +47,7 @@ public class Interceptor implements HandlerInterceptor {
 
             signature.initVerify(pkey);
 
-            signature.update(raw.getBytes(StandardCharsets.UTF_8));
+            signature.update(signedContent.getBytes(StandardCharsets.UTF_8));
 
             byte[] signatureBytes = Base64.decodeBase64(digitalSignature);
             return signature.verify(signatureBytes);
