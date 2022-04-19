@@ -8,4 +8,5 @@ ENV KEYSTORE_PASSWORD=dds-it-dlp
 COPY --from=build /home/gradle/src/build/libs/*.jar app.jar
 COPY config config
 COPY config/hosts-docker.config config/hosts.config
+RUN rm config/currentView; exit 0
 ENTRYPOINT ["java","-jar","/app.jar"]
