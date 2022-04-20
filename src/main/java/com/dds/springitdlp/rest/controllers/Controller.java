@@ -33,7 +33,7 @@ public class Controller {
         return this.service.getExtract(accountId);
     }
 
-    @GetMapping("/totalValue")
+    @PostMapping("/totalValue")
     public double getTotalValue(@RequestBody List<String> accounts) {
         return this.service.getTotalValue(accounts);
     }
