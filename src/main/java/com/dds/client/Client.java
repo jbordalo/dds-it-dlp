@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,7 +14,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.*;
+import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -21,25 +25,21 @@ import java.security.spec.X509EncodedKeySpec;
 public class Client {
     private static final String URL = "https://localhost:8080";
     private static final String ALGORITHM = " SHA512withECDSA";
-    private static final String PRIVATE_KEY = "MHQCAQEEIJwAjNAL4T9Vz7fvAB8UBBJNPNXY5MW1MbTSEHzHzWMKoAcGBSuBBAAKoUQDQgAEXR2ItGt8szt5EJ8BRJyf1+y2e6MQnodh3c6hv/6OF3Dh2zbkekR8BGN/hnpvMPlz7uwc/cf8c6rgNXzZE3LrxQ==";
+    private static PrivateKey key;
+
     private static final HttpClient client = HttpClient.newBuilder().build();
 
 
-    public static byte[] sign(byte[] data) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, SignatureException, InvalidKeyException {
-        Signature signature = Signature.getInstance("SHA512withECDSA");
-        KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
+    public static byte[] sign(byte[] data) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, SignatureException, InvalidKeyException, IOException, KeyStoreException, CertificateException, UnrecoverableKeyException {
+        Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
 
-        byte[] encoded = Base64.decodeBase64(PRIVATE_KEY);
-
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-        PrivateKey key = keyFactory.generatePrivate(keySpec);
         signature.initSign(key, new SecureRandom());
         signature.update(data);
 
         return signature.sign();
     }
 
-    public static String getBalance(String accountId) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException {
+    public static String getBalance(String accountId) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
         String reqUrl = URL + "/balance?accountId=" + accountId;
 
         String signable = "GET " + reqUrl + ALGORITHM;
@@ -135,11 +135,21 @@ public class Client {
         System.out.println(response.statusCode());
     }
 
-    public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException {
+    public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
         Security.addProvider(new BouncyCastleProvider());
+
+        KeyStore keyStore = KeyStore.getInstance("pkcs12");
+        FileInputStream stream = new FileInputStream("config/keystores/keyStore");
+
+        keyStore.load(stream, "ddsdds".toCharArray());
+
+        stream.close();
+
+        key = (PrivateKey) keyStore.getKey("dds", "ddsdds".toCharArray());
+
 //        sendTransaction(new Transaction(new Account("orig"), new Account("dest"), 10.0));
 
-        System.out.println(getBalance("dest"));
+        System.out.println(getBalance("MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEXR2ItGt8szt5EJ8BRJyf1+y2e6MQnodh3c6hv/6OF3Dh2zbkekR8BGN/hnpvMPlz7uwc/cf8c6rgNXzZE3LrxQ=="));
 
 //        System.out.println(getLedger());
 //
