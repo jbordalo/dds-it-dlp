@@ -34,17 +34,19 @@ public class Controller {
     }
 
     @PostMapping("/sendTransaction")
-    public void sendTransaction(@RequestBody Transaction transaction) {
-        this.service.sendTransaction(transaction);
+    public void sendTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
+        if (transaction.getOrigin().getAccountId().equals(accountId))
+            this.service.sendTransaction(transaction);
+        //TODO ?? exception?
     }
 
-    @GetMapping("/balance/{accountId}")
-    public double getBalance(@PathVariable String accountId) {
+    @GetMapping("/balance")
+    public double getBalance(@RequestParam String accountId) {
         return this.service.getBalance(accountId);
     }
 
-    @GetMapping("/extract/{accountId}")
-    public List<Transaction> getExtract(@PathVariable String accountId) {
+    @GetMapping("/extract")
+    public List<Transaction> getExtract(@RequestParam String accountId) {
         return this.service.getExtract(accountId);
     }
 
