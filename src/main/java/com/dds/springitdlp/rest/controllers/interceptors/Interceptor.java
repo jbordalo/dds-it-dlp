@@ -15,33 +15,32 @@ public class Interceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-
-        String algorithm = request.getHeader("algorithm");
-        String signedContent = request.getMethod() + " " +
-                request.getRequestURL().toString() + "?" + request.getQueryString()
-                + " " + algorithm;
-
         String digitalSignature = request.getHeader("signature");
-        //TODO v + missing fix
-        String publicKey = request.getParameter("accountId").replace(" ", "+");
-        //String publicKey ="MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEXR2ItGt8szt5EJ8BRJyf1+y2e6MQnodh3c6hv/6OF3Dh2zbkekR8BGN/hnpvMPlz7uwc/cf8c6rgNXzZE3LrxQ=="; //request.getParameter("accountId");
-        try {
+        if(digitalSignature != null) {
+            String algorithm = request.getHeader("algorithm");
+            String signedContent = request.getMethod() + " " +
+                    request.getRequestURL().toString() + "?" + request.getQueryString()
+                    + " " + algorithm;
 
-            Signature signature = Signature.getInstance(algorithm, "BC");
-            byte[] encoded = Base64.decodeBase64(publicKey);
-            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
-            PublicKey pkey = keyFactory.generatePublic(keySpec);
-            signature.initVerify(pkey);
-            signature.update(signedContent.getBytes(StandardCharsets.UTF_8));
+            String publicKey = request.getParameter("accountId");
+            try {
 
-            byte[] signatureBytes = Base64.decodeBase64(digitalSignature);
-            return signature.verify(signatureBytes);
-        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | NoSuchProviderException |
-                 InvalidKeySpecException e) {
-            return false;
+                Signature signature = Signature.getInstance(algorithm, "BC");
+                byte[] encoded = Base64.decodeBase64(publicKey);
+                KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
+                X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
+                PublicKey pkey = keyFactory.generatePublic(keySpec);
+                signature.initVerify(pkey);
+                signature.update(signedContent.getBytes(StandardCharsets.UTF_8));
+
+                byte[] signatureBytes = Base64.decodeBase64(digitalSignature);
+                return signature.verify(signatureBytes);
+            } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | NoSuchProviderException |
+                     InvalidKeySpecException e) {
+                return false;
+            }
         }
-
+        return true;
     }
 
 }
