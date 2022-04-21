@@ -12,17 +12,22 @@ import java.util.Objects;
 @NoArgsConstructor
 public class Account implements Serializable {
     public final static String SYSTEM = "GOD";
-    private  String accountId;
-    private  String ownerId;
+    public final static int SHA256_B64_LEN = 43;
+    private String accountId;
+    private String pubKey;
 
     public Account(String accountId) {
         this.accountId = accountId;
-        // TODO parse
-        this.ownerId = accountId;
+        if (!accountId.equals(SYSTEM))
+            this.pubKey = parse(accountId);
     }
 
     public static Account SYSTEM_ACC() {
         return new Account(SYSTEM);
+    }
+
+    public static String parse(String accountId) {
+        return accountId.substring(SHA256_B64_LEN);
     }
 
     @Override

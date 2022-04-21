@@ -1,4 +1,6 @@
 package com.dds.springitdlp.rest.controllers.interceptors;
+
+import com.dds.springitdlp.application.entities.Account;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -16,13 +18,13 @@ public class Interceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String digitalSignature = request.getHeader("signature");
-        if(digitalSignature != null) {
+        if (digitalSignature != null) {
             String algorithm = request.getHeader("algorithm");
             String signedContent = request.getMethod() + " " +
                     request.getRequestURL().toString() + "?" + request.getQueryString()
                     + " " + algorithm;
 
-            String publicKey = request.getParameter("accountId");
+            String publicKey = Account.parse(request.getParameter("accountId"));
             try {
 
                 Signature signature = Signature.getInstance(algorithm, "BC");
