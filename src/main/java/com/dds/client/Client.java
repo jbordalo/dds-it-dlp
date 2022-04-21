@@ -20,7 +20,7 @@ import java.security.spec.InvalidKeySpecException;
 
 public class Client {
 
-    private static final int MAX = 5;
+    private static final int MAX = 4;
     private static final String URL = "https://localhost:8080";
     private static final String ALGORITHM = "SHA512withECDSA";
     private static final HttpClient client = HttpClient.newBuilder().build();
@@ -143,26 +143,18 @@ public class Client {
 
     public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
         Security.addProvider(new BouncyCastleProvider());
-        keys = new PrivateKey[MAX];
-        accs = new Account[MAX];
-        KeyStore keyStore = KeyStore.getInstance("pkcs12");
-        FileInputStream stream = new FileInputStream("config/keystores/keyStore");
+        KeyStore keyStore = initializeKeystore();
 
-        keyStore.load(stream, "ddsdds".toCharArray());
+        initializeAccounts(keyStore);
 
-        stream.close();
-        MessageDigest hash = MessageDigest.getInstance("SHA-256");
-
-        for (int i = 0; i < 2; i++) {
-            keys[i] = (PrivateKey) keyStore.getKey("dds" + (i + 1), "ddsdds".toCharArray());
-            String pubKey64 = Base64.encodeBase64URLSafeString(keyStore.getCertificate("dds" + (i + 1)).getPublicKey().getEncoded());
-            String emailtime = i + "bacinta01@greatestemail.com" + System.currentTimeMillis();
-            accs[i] = new Account(Base64.encodeBase64URLSafeString(hash.digest(emailtime.getBytes(StandardCharsets.UTF_8))) + pubKey64);
+        for (int i = 0; i < MAX; i++) {
+            int aux = (i + 1) % MAX;
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0), keys[i]);
+            System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
+        //sendTransaction(new Transaction(accs[0], accs[1], 10.0), keys[0]);
 
-        sendTransaction(new Transaction(accs[0], accs[1], 10.0), keys[0]);
-
-        System.out.println(getBalance(accs[0].getAccountId(), keys[0]));
+        //System.out.println(getBalance(accs[0].getAccountId(), keys[0]));
 
         System.out.println(getLedger());
 
@@ -170,6 +162,30 @@ public class Client {
 
         System.out.println(getGlobalLedgerValue());
 
-        System.out.println(getTotalValue(new String[]{accs[0].getAccountId(), accs[1].toString()}));
+        System.out.println(getTotalValue(new String[]{accs[0].getAccountId(), accs[1].getAccountId()}));
+    }
+
+    private static void initializeAccounts(KeyStore keyStore) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {
+        keys = new PrivateKey[MAX];
+        accs = new Account[MAX];
+
+        MessageDigest hash = MessageDigest.getInstance("SHA-256");
+
+        for (int i = 0; i < MAX; i++) {
+            keys[i] = (PrivateKey) keyStore.getKey("dds" + i, "ddsdds".toCharArray());
+            String pubKey64 = Base64.encodeBase64URLSafeString(keyStore.getCertificate("dds" + i).getPublicKey().getEncoded());
+            String emailtime = i + "bacinta01@greatestemail.com" + System.currentTimeMillis();
+            accs[i] = new Account(Base64.encodeBase64URLSafeString(hash.digest(emailtime.getBytes(StandardCharsets.UTF_8))) + pubKey64);
+        }
+    }
+
+    private static KeyStore initializeKeystore() throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
+        KeyStore keyStore = KeyStore.getInstance("pkcs12");
+        FileInputStream stream = new FileInputStream("config/keystores/keyStore");
+
+        keyStore.load(stream, "ddsdds".toCharArray());
+
+        stream.close();
+        return keyStore;
     }
 }
