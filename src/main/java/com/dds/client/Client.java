@@ -24,8 +24,9 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class Client {
     private static final String URL = "https://localhost:8080";
-    private static final String ALGORITHM = " SHA512withECDSA";
+    private static final String ALGORITHM = "SHA512withECDSA";
     private static PrivateKey key;
+    private static PublicKey pubkey;
 
     private static final HttpClient client = HttpClient.newBuilder().build();
 
@@ -42,9 +43,9 @@ public class Client {
     public static String getBalance(String accountId) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
         String reqUrl = URL + "/balance?accountId=" + accountId;
 
-        String signable = "GET " + reqUrl + ALGORITHM;
+        String signable = "GET " + reqUrl + " " + ALGORITHM;
 
-        String signature = Base64.encodeBase64String(sign(signable.getBytes(StandardCharsets.UTF_8)));
+        String signature = getSignature(signable);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("signature", signature, "algorithm", ALGORITHM)
@@ -57,13 +58,10 @@ public class Client {
         return response.body();
     }
 
-    public static String getLedger() throws URISyntaxException, IOException, InterruptedException {
+    public static String getLedger() throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/ledger" ;
 
-        String signature = null;
-
         HttpRequest request = HttpRequest.newBuilder()
-                .headers("signature", signature, "algorithm", "SHA512withECDSA")
                 .uri(new URI(reqUrl))
                 .GET()
                 .build();
@@ -77,7 +75,6 @@ public class Client {
         String reqUrl = URL + "/globalLedgerValue";
 
         HttpRequest request = HttpRequest.newBuilder()
-                .headers("algorithm", "SHA512withECDSA")
                 .uri(new URI(reqUrl))
                 .GET()
                 .build();
@@ -104,11 +101,16 @@ public class Client {
         return response.body();
     }
 
-    public static String getExtract(String accountId) throws URISyntaxException, IOException, InterruptedException {
+
+    public static String getExtract(String accountId) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/extract?accountId=" + accountId;
 
+        String signable = "GET " + reqUrl + " " + ALGORITHM;
+
+        String signature = getSignature(signable);
+
         HttpRequest request = HttpRequest.newBuilder()
-                .headers("algorithm", "SHA512withECDSA")
+                .headers("signature", signature, "algorithm", ALGORITHM)
                 .uri(new URI(reqUrl))
                 .GET()
                 .build();
@@ -118,13 +120,17 @@ public class Client {
         return response.body();
     }
 
-    public static void sendTransaction(Transaction transaction) throws URISyntaxException, IOException, InterruptedException {
-        String reqUrl = URL + "/sendTransaction?accountId" + transaction.getOrigin().getAccountId();
+    public static void sendTransaction(Transaction transaction) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
+        String reqUrl = URL + "/sendTransaction?accountId=" + transaction.getOrigin().getAccountId();
 
         String transactionJSON = new ObjectMapper().writeValueAsString(transaction);
 
+        String signable = "POST " + reqUrl + " " + ALGORITHM;
+
+        String signature = getSignature(signable);
+
         HttpRequest request = HttpRequest.newBuilder()
-                .headers("algorithm", "SHA512withECDSA")
+                .headers("signature", signature, "algorithm", ALGORITHM)
                 .uri(new URI(reqUrl))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(transactionJSON))
@@ -133,6 +139,10 @@ public class Client {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         System.out.println(response.statusCode());
+    }
+
+    private static String getSignature(String signable) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, SignatureException, InvalidKeyException, IOException, KeyStoreException, CertificateException, UnrecoverableKeyException {
+        return Base64.encodeBase64String(sign(signable.getBytes(StandardCharsets.UTF_8)));
     }
 
     public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
@@ -146,17 +156,20 @@ public class Client {
         stream.close();
 
         key = (PrivateKey) keyStore.getKey("dds", "ddsdds".toCharArray());
+        pubkey = keyStore.getCertificate("dds").getPublicKey();
 
-//        sendTransaction(new Transaction(new Account("orig"), new Account("dest"), 10.0));
+        String pubkey64 = Base64.encodeBase64URLSafeString(pubkey.getEncoded());
 
-        System.out.println(getBalance("MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEXR2ItGt8szt5EJ8BRJyf1+y2e6MQnodh3c6hv/6OF3Dh2zbkekR8BGN/hnpvMPlz7uwc/cf8c6rgNXzZE3LrxQ=="));
+        sendTransaction(new Transaction(new Account(pubkey64), new Account("dest"), 10.0));
 
-//        System.out.println(getLedger());
-//
-//        System.out.println(getExtract("dest"));
-//
-//        System.out.println(getGlobalLedgerValue());
-//
-//        System.out.println(getTotalValue(new String[]{"orig", "dest"}));
+        System.out.println(getBalance(pubkey64));
+
+        System.out.println(getLedger());
+
+        System.out.println(getExtract(pubkey64));
+
+        System.out.println(getGlobalLedgerValue());
+
+        System.out.println(getTotalValue(new String[]{pubkey64, "dest"}));
     }
 }
