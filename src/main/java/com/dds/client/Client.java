@@ -86,7 +86,6 @@ public class Client {
         String accountsJSON = new ObjectMapper().writeValueAsString(accounts);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .headers("algorithm", "SHA512withECDSA")
                 .uri(new URI(reqUrl))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(accountsJSON))
@@ -152,9 +151,6 @@ public class Client {
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0), keys[i]);
             System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
-        //sendTransaction(new Transaction(accs[0], accs[1], 10.0), keys[0]);
-
-        //System.out.println(getBalance(accs[0].getAccountId(), keys[0]));
 
         System.out.println(getLedger());
 
