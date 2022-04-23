@@ -32,7 +32,6 @@ public class LedgerClient {
             logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
 
             if (reply != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-
         } catch (IOException e) {
             e.printStackTrace();
         }

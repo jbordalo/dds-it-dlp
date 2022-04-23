@@ -10,6 +10,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,9 +21,15 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
     private final Logger logger;
     private Ledger ledger;
 
-    public LedgerServer() {
+    private final String ledgerPath;
+
+    public LedgerServer() throws IOException {
         this.logger = Logger.getLogger(LedgerServer.class.getName());
         this.ledger = new Ledger();
+
+        Files.createDirectories(Path.of(System.getenv("STORAGE_PATH")));
+
+        this.ledgerPath = "ledger" + System.getenv("REPLICA_ID");
     }
 
     @Override
@@ -52,11 +60,24 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
         }
     }
 
+    private void persist() {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos); FileOutputStream outputStream = new FileOutputStream(System.getenv("STORAGE_PATH") + this.ledgerPath)) {
+            oos.writeObject(this.ledger);
+            this.logger.log(Level.INFO, "persist@Server: persisting ledger");
+            outputStream.write(bos.toByteArray());
+        } catch (IOException e) {
+            this.logger.log(Level.SEVERE, "persist@Server: error while persisting ledger");
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public byte[] appExecuteOrdered(byte[] bytes, MessageContext messageContext) {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bis)) {
             Transaction transaction = (Transaction) ois.readObject();
             this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
+
+            this.persist();
 
             return this.ledger.sendTransaction(transaction) == 0 ? null : new byte[0];
         } catch (IOException | ClassNotFoundException e) {
