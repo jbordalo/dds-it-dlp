@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 public class LedgerServer extends DefaultSingleRecoverable implements CommandLineRunner {
     private final Logger logger;
     private Ledger ledger;
-
     private final String ledgerPath;
 
     public LedgerServer() throws IOException {
