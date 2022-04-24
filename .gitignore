@@ -4,3 +4,5 @@
 *.class
 /out
 /build
+config/currentView
+mnt/vol
