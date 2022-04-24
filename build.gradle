@@ -52,3 +52,14 @@ idea {
 		downloadSources = true
 	}
 }
+
+task client(type:JavaExec) {
+   main = "com.dds.client.Client"
+   classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += "-Djavax.net.ssl.trustStore=config/certificates/keystore"
+	jvmArgs += "-Djavax.net.ssl.trustStorePassword=keystorePass"
+	jvmArgs += "-Dhttps.protocols=TLSv1.3"
+}
