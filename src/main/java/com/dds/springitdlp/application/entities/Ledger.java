@@ -29,20 +29,31 @@ public class Ledger implements Serializable {
         return balance;
     }
 
-    public int sendTransaction(Transaction transaction) {
-        if (transaction.getAmount() <= 0) return 1;
+    /**
+     * Applies a transaction to the ledger
+     * @param transaction Transaction to be applied
+     * @return boolean true if transaction went through, false otherwise
+     */
+    public boolean sendTransaction(Transaction transaction) {
+        if (transaction.getAmount() <= 0) return false;
 
         Account origin = transaction.getOrigin();
         Account destination = transaction.getDestination();
+        int nonce = transaction.getNonce();
 
         List<Transaction> originList = this.map.get(origin);
         if (originList == null) {
             originList = new LinkedList<>();
             originList.add(Transaction.SYS_INIT(origin));
             this.map.put(origin, originList);
+        } else {
+            if (originList.contains(transaction)) {
+                System.out.println("Denying operation");
+                return false;
+            }
         }
 
-        if (this.getBalance(origin) < transaction.getAmount()) return 1;
+        if (this.getBalance(origin) < transaction.getAmount()) return false;
 
         List<Transaction> destinationList = this.map.get(destination);
         if (destinationList == null) {
@@ -52,9 +63,9 @@ public class Ledger implements Serializable {
         }
         destinationList.add(transaction);
 
-        originList.add(new Transaction(origin, destination, -transaction.getAmount()));
+        originList.add(new Transaction(origin, destination, -transaction.getAmount(), nonce));
 
-        return 0;
+        return true;
     }
 
     public List<Transaction> getExtract(Account account) {

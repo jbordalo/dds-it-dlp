@@ -76,9 +76,11 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
             Transaction transaction = (Transaction) ois.readObject();
             this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
 
-            this.persist();
+            boolean error = !this.ledger.sendTransaction(transaction);
 
-            return this.ledger.sendTransaction(transaction) == 0 ? null : new byte[0];
+            if (!error) this.persist();
+
+            return error ? new byte[0] : null;
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }

@@ -27,8 +27,10 @@ public class Controller {
 
     @PostMapping("/sendTransaction")
     public void sendTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
-        if (transaction.getOrigin().getAccountId().equals(accountId))
+        if (transaction.getOrigin().getAccountId().equals(accountId)) {
             this.service.sendTransaction(transaction);
+            return;
+        }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
