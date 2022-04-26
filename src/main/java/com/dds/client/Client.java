@@ -148,7 +148,7 @@ public class Client {
 
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
-            sendTransaction(new Transaction(accs[i], accs[aux], 10.0), keys[i]);
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt()), keys[i]);
             System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
 
