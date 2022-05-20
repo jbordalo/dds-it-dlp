@@ -54,7 +54,7 @@ public class Client {
         return response.body();
     }
 
-    public static String getLedger() throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
+    public static String getLedger() throws URISyntaxException, IOException, InterruptedException {
         String reqUrl = URL + "/ledger";
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -95,7 +95,6 @@ public class Client {
 
         return response.body();
     }
-
 
     public static String getExtract(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/extract?accountId=" + accountId;
@@ -148,7 +147,7 @@ public class Client {
 
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
-            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt()), keys[i]);
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis()), keys[i]);
             System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
 
@@ -170,7 +169,7 @@ public class Client {
         for (int i = 0; i < MAX; i++) {
             keys[i] = (PrivateKey) keyStore.getKey("dds" + i, "ddsdds".toCharArray());
             String pubKey64 = Base64.encodeBase64URLSafeString(keyStore.getCertificate("dds" + i).getPublicKey().getEncoded());
-            String emailtime = i + "bacinta01@greatestemail.com" + System.currentTimeMillis();
+            String emailtime = i + "bacinta01@greatestemail.com" + System.currentTimeMillis() + new SecureRandom().nextInt();
             accs[i] = new Account(Base64.encodeBase64URLSafeString(hash.digest(emailtime.getBytes(StandardCharsets.UTF_8))) + pubKey64);
         }
     }

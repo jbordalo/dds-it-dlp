@@ -1,6 +1,10 @@
 package com.dds.springitdlp.application.bftSmart;
 
-import bftsmart.tom.ServiceProxy;
+import bftsmart.communication.client.ReplyListener;
+import bftsmart.tom.AsynchServiceProxy;
+import bftsmart.tom.RequestContext;
+import bftsmart.tom.core.messages.TOMMessage;
+import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
@@ -9,29 +13,32 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Component
 public class LedgerClient {
-    ServiceProxy serviceProxy;
+    AsynchServiceProxy serviceProxy;
     Logger logger;
 
     public LedgerClient() {
         this.logger = Logger.getLogger(LedgerClient.class.getName());
         int id = Integer.parseInt(System.getenv().get("REPLICA_ID"));
-        serviceProxy = new ServiceProxy(id);
+        serviceProxy = new AsynchServiceProxy(id);
     }
 
     public void sendTransaction(Transaction transaction) throws ResponseStatusException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
             oos.writeObject(transaction);
-            byte[] bts = bos.toByteArray();
-            byte[] reply = serviceProxy.invokeOrdered(bts);
-            logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+            byte[] bytes = bos.toByteArray();
+            byte[] reply = serviceProxy.invokeOrdered(bytes);
 
-            if (reply != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
+            this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -53,7 +60,7 @@ public class LedgerClient {
                 return (Ledger) objIn.readObject();
             }
         } catch (IOException | ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "error while retrieving ledger", e);
+            this.logger.log(Level.SEVERE, "error while retrieving ledger", e);
         }
         return null;
     }

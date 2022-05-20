@@ -14,7 +14,7 @@ public class Ledger implements Serializable {
     private final Map<Account, List<Transaction>> map;
 
     public Ledger() {
-        map = new HashMap<>();
+        this.map = new HashMap<>();
     }
 
     public double getBalance(Account account) {
@@ -40,6 +40,7 @@ public class Ledger implements Serializable {
         Account origin = transaction.getOrigin();
         Account destination = transaction.getDestination();
         int nonce = transaction.getNonce();
+        long timestamp = transaction.getTimestamp();
 
         List<Transaction> originList = this.map.get(origin);
         if (originList == null) {
@@ -48,8 +49,8 @@ public class Ledger implements Serializable {
             this.map.put(origin, originList);
         } else {
             if (originList.contains(transaction)) {
-                System.out.println("Denying operation");
-                return false;
+                System.out.println("Repeated transaction");
+                return true;
             }
         }
 
@@ -61,9 +62,10 @@ public class Ledger implements Serializable {
             destinationList.add(Transaction.SYS_INIT(destination));
             this.map.put(destination, destinationList);
         }
+
         destinationList.add(transaction);
 
-        originList.add(new Transaction(origin, destination, -transaction.getAmount(), nonce));
+        originList.add(new Transaction(origin, destination, -transaction.getAmount(), nonce, timestamp));
 
         return true;
     }

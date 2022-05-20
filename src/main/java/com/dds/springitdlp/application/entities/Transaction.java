@@ -17,10 +17,12 @@ public class Transaction implements Serializable {
     private Account origin;
     private Account destination;
     private double amount;
+
     private int nonce;
+    private long timestamp;
 
     public static Transaction SYS_INIT(Account account) {
-        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.INITIAL_VALUE, 0);
+        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.INITIAL_VALUE, 0, 0);
     }
 
     @Override
