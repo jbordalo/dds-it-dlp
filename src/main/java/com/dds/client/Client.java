@@ -117,14 +117,15 @@ public class Client {
     public static void sendTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/sendTransaction?accountId=" + transaction.getOrigin().getAccountId();
 
-        String transactionJSON = new ObjectMapper().writeValueAsString(transaction);
-
-        String signable = "POST " + reqUrl + " " + ALGORITHM;
+        String signable = transaction.toString();
 
         String signature = getSignature(signable, key);
 
+        transaction.setSignature(signature);
+
+        String transactionJSON = new ObjectMapper().writeValueAsString(transaction);
+
         HttpRequest request = HttpRequest.newBuilder()
-                .headers("signature", signature, "algorithm", ALGORITHM)
                 .uri(new URI(reqUrl))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(transactionJSON))
@@ -147,7 +148,7 @@ public class Client {
 
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
-            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis()), keys[i]);
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
             System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
 

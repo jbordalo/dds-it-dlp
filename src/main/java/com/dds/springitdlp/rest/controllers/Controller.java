@@ -5,12 +5,10 @@ import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.services.AppService;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.WebServerException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.servlet.http.HttpServletResponse;
 import java.security.Security;
 import java.util.List;
 

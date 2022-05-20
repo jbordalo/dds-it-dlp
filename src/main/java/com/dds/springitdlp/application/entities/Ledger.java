@@ -31,16 +31,22 @@ public class Ledger implements Serializable {
 
     /**
      * Applies a transaction to the ledger
+     *
      * @param transaction Transaction to be applied
      * @return boolean true if transaction went through, false otherwise
      */
     public boolean sendTransaction(Transaction transaction) {
+
+        // TODO
+        if (!Transaction.verify(transaction)) return false;
+
         if (transaction.getAmount() <= 0) return false;
 
         Account origin = transaction.getOrigin();
         Account destination = transaction.getDestination();
         int nonce = transaction.getNonce();
         long timestamp = transaction.getTimestamp();
+        String signature = transaction.getSignature();
 
         List<Transaction> originList = this.map.get(origin);
         if (originList == null) {
@@ -65,7 +71,7 @@ public class Ledger implements Serializable {
 
         destinationList.add(transaction);
 
-        originList.add(new Transaction(origin, destination, -transaction.getAmount(), nonce, timestamp));
+        originList.add(new Transaction(origin, destination, -transaction.getAmount(), nonce, timestamp, signature));
 
         return true;
     }

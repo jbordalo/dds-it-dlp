@@ -57,6 +57,7 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
             LedgerRequestType reqType = (LedgerRequestType) objIn.readObject();
             switch (reqType) {
                 case SEND_TRANSACTION -> {
+                    // TODO return null?
                     return this.ledgerHandler.sendTransaction(objIn);
                 }
                 default -> {
