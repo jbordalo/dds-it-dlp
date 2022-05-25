@@ -3,6 +3,7 @@ package com.dds.springitdlp.application.bftSmart;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Component
 public class LedgerHandler {
 
     private Ledger ledger;
@@ -27,20 +29,14 @@ public class LedgerHandler {
         this.ledgerPath = "ledger" + System.getenv("REPLICA_ID");
     }
 
-    public byte[] sendTransaction(ObjectInput objectInput) {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            Transaction transaction = (Transaction) objectInput.readObject();
-            this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
+    public boolean sendTransaction(Transaction transaction) {
+        this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
 
-            boolean error = !this.ledger.sendTransaction(transaction);
+        boolean error = !this.ledger.sendTransaction(transaction);
 
-            if (!error) this.persist();
+        if (!error) this.persist();
 
-            return error ? new byte[]{0x01} : new byte[]{0x00};
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return new byte[0];
+        return error;
     }
 
     private void persist() {

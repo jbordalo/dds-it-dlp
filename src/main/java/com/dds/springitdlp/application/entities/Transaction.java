@@ -58,7 +58,6 @@ public class Transaction implements Serializable {
     public static boolean verify(Transaction transaction) {
         String publicKey = Account.parse(transaction.getOrigin().getAccountId());
         try {
-
             Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
             byte[] encoded = Base64.decodeBase64(publicKey);
             KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");

@@ -1,6 +1,7 @@
 package com.dds.springitdlp.application.services;
 
 import com.dds.springitdlp.application.bftSmart.LedgerClient;
+import com.dds.springitdlp.application.bftSmart.LedgerHandler;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
@@ -15,10 +16,12 @@ import java.util.List;
 @Service
 public class AppService {
     private final LedgerClient ledgerClient;
+    private final LedgerHandler ledgerHandler;
 
     @Autowired
-    public AppService(LedgerClient ledgerClient) {
+    public AppService(LedgerClient ledgerClient, LedgerHandler ledgerHandler) {
         this.ledgerClient = ledgerClient;
+        this.ledgerHandler = ledgerHandler;
     }
 
     public void sendTransaction(Transaction transaction) {

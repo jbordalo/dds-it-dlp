@@ -4,6 +4,8 @@ import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import com.dds.springitdlp.application.entities.Ledger;
+import com.dds.springitdlp.application.entities.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +18,10 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
     private final Logger logger;
     private final LedgerHandler ledgerHandler;
 
-    public LedgerServer() throws IOException {
+    @Autowired
+    public LedgerServer(LedgerHandler ledgerHandler) {
+        this.ledgerHandler = ledgerHandler;
         this.logger = Logger.getLogger(LedgerServer.class.getName());
-        this.ledgerHandler = new LedgerHandler();
     }
 
     @Override
@@ -57,8 +60,8 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
             LedgerRequestType reqType = (LedgerRequestType) objIn.readObject();
             switch (reqType) {
                 case SEND_TRANSACTION -> {
-                    // TODO return null?
-                    return this.ledgerHandler.sendTransaction(objIn);
+                    Transaction transaction = (Transaction) objIn.readObject();
+                    return this.ledgerHandler.sendTransaction(transaction) ? new byte[]{0x01} : new byte[]{0x00};
                 }
                 default -> {
                     return null;
