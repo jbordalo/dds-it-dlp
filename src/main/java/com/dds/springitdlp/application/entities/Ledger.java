@@ -8,7 +8,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-
 public class Ledger implements Serializable {
     @Getter
     private final Map<Account, List<Transaction>> map;

@@ -1,6 +1,7 @@
 package com.dds.springitdlp.application.services;
 
-import com.dds.springitdlp.application.bftSmart.LedgerClient;
+import com.dds.springitdlp.application.bftSmart.ConsensusClient;
+import com.dds.springitdlp.application.bftSmart.LedgerHandler;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
@@ -14,27 +15,29 @@ import java.util.List;
 
 @Service
 public class AppService {
-    private final LedgerClient ledgerClient;
+    private final ConsensusClient consensusClient;
+    private final LedgerHandler ledgerHandler;
 
     @Autowired
-    public AppService(LedgerClient ledgerClient) {
-        this.ledgerClient = ledgerClient;
+    public AppService(ConsensusClient consensusClient, LedgerHandler ledgerHandler) {
+        this.consensusClient = consensusClient;
+        this.ledgerHandler = ledgerHandler;
     }
 
     public void sendTransaction(Transaction transaction) {
         if (Transaction.verify(transaction)) {
-            this.ledgerClient.sendTransaction(transaction);
+            this.consensusClient.sendTransaction(transaction);
             return;
         }
         throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 
     public double getBalance(String accountId) {
-        return this.ledgerClient.getBalance(new Account(accountId));
+        return this.consensusClient.getBalance(new Account(accountId));
     }
 
     public List<Transaction> getExtract(String accountId) {
-        return this.ledgerClient.getExtract(new Account(accountId));
+        return this.consensusClient.getExtract(new Account(accountId));
     }
 
     public double getTotalValue(List<String> accounts) {
@@ -42,14 +45,14 @@ public class AppService {
         for (String account : accounts) {
             accountsFinal.add(new Account(account));
         }
-        return this.ledgerClient.getTotalValue(accountsFinal);
+        return this.consensusClient.getTotalValue(accountsFinal);
     }
 
     public double getGlobalLedgerValue() {
-        return this.ledgerClient.getGlobalLedgerValue();
+        return this.consensusClient.getGlobalLedgerValue();
     }
 
     public Ledger getLedger() {
-        return this.ledgerClient.getLedger();
+        return this.consensusClient.getLedger();
     }
 }
