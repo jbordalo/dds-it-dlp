@@ -3,6 +3,7 @@ package com.dds.springitdlp.application.bftSmart;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
+import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,6 +74,7 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public byte[] appExecuteUnordered(byte[] command, MessageContext messageContext) {
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(command);
@@ -80,19 +83,69 @@ public class LedgerServer extends DefaultSingleRecoverable implements CommandLin
             LedgerRequestType reqType = (LedgerRequestType) objIn.readObject();
             switch (reqType) {
                 case GET_LEDGER -> {
-                    return this.ledgerHandler.getLedger();
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        Ledger ledger = this.ledgerHandler.getLedger();
+                        oos.writeObject(ledger);
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "getLedger@Server: sending ledger");
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 case GET_BALANCE -> {
-                    return this.ledgerHandler.getBalance(objIn);
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        Account account = (Account) objIn.readObject();
+                        oos.writeDouble(this.ledgerHandler.getBalance(account));
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "getBalance@Server: sending balance for " + account.getAccountId());
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 case GET_EXTRACT -> {
-                    return this.ledgerHandler.getExtract(objIn);
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        Account account = (Account) objIn.readObject();
+                        oos.writeObject(this.ledgerHandler.getExtract(account));
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "getExtract@Server: fetching extract of " + account.getAccountId());
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 case GET_TOTAL_VALUE -> {
-                    return this.ledgerHandler.getTotalValue(objIn);
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        List<Account> list = (List<Account>) objIn.readObject();
+                        oos.writeDouble(this.ledgerHandler.getTotalValue(list));
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "getTotalValue@Server: sending total value of the given list");
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 case GET_GLOBAL_LEDGER_VALUE -> {
-                    return this.ledgerHandler.getGlobalLedgerValue();
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        oos.writeDouble(this.ledgerHandler.getGlobalLedgerValue());
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "getGlobalLedgerValue@Server");
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 default -> {
                     return null;
