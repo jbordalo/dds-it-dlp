@@ -16,14 +16,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Component
-public class LedgerServer extends DefaultSingleRecoverable implements CommandLineRunner {
+public class ConsensusServer extends DefaultSingleRecoverable implements CommandLineRunner {
     private final Logger logger;
     private final LedgerHandler ledgerHandler;
 
     @Autowired
-    public LedgerServer(LedgerHandler ledgerHandler) {
+    public ConsensusServer(LedgerHandler ledgerHandler) {
         this.ledgerHandler = ledgerHandler;
-        this.logger = Logger.getLogger(LedgerServer.class.getName());
+        this.logger = Logger.getLogger(ConsensusServer.class.getName());
     }
 
     @Override

@@ -14,16 +14,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Component
-public class LedgerClient {
+public class ConsensusClient implements Consensus {
     AsynchServiceProxy serviceProxy;
     Logger logger;
 
-    public LedgerClient() {
-        this.logger = Logger.getLogger(LedgerClient.class.getName());
+    public ConsensusClient() {
+        this.logger = Logger.getLogger(ConsensusClient.class.getName());
         int id = Integer.parseInt(System.getenv().get("REPLICA_ID"));
-        serviceProxy = new AsynchServiceProxy(id);
+        this.serviceProxy = new AsynchServiceProxy(id);
     }
 
+    @Override
     public void sendTransaction(Transaction transaction) throws ResponseStatusException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
@@ -39,6 +40,7 @@ public class LedgerClient {
         }
     }
 
+    @Override
     public Ledger getLedger() {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
@@ -60,6 +62,7 @@ public class LedgerClient {
         return null;
     }
 
+    @Override
     public double getBalance(Account account) throws ResponseStatusException {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
@@ -81,12 +84,13 @@ public class LedgerClient {
                 return balance;
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "error while calculating balance", e);
+            this.logger.log(Level.SEVERE, "error while calculating balance", e);
         }
         return -1.0;
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public List<Transaction> getExtract(Account account) {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
@@ -102,17 +106,18 @@ public class LedgerClient {
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
                 List<Transaction> extract = (List<Transaction>) objIn.readObject();
-                //TODO - acc doesn't exist if there are no transactions
+
                 if (extract == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
                 return extract;
             }
         } catch (IOException | ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "error while fetching extract for account: " + account.getAccountId(), e);
+            this.logger.log(Level.SEVERE, "error while fetching extract for account: " + account.getAccountId(), e);
         }
         return null;
     }
 
+    @Override
     public double getTotalValue(List<Account> accounts) {
         for (Account a : accounts) {
             logger.log(Level.INFO, a.toString());
@@ -137,11 +142,12 @@ public class LedgerClient {
                 return totalValue;
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "error while calculating balance", e);
+            this.logger.log(Level.SEVERE, "error while calculating balance", e);
         }
         return -1.0;
     }
 
+    @Override
     public double getGlobalLedgerValue() {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
@@ -158,7 +164,7 @@ public class LedgerClient {
                 return objIn.readDouble();
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "error while calculating global value", e);
+            this.logger.log(Level.SEVERE, "error while calculating global value", e);
         }
         return -1.0;
     }
