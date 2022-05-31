@@ -136,6 +136,28 @@ public class Client {
         System.out.println(response.statusCode());
     }
 
+    public static void sendAsyncTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
+        String reqUrl = URL + "/sendAsyncTransaction?accountId=" + transaction.getOrigin().getAccountId();
+
+        String signable = transaction.toString();
+
+        String signature = getSignature(signable, key);
+
+        transaction.setSignature(signature);
+
+        String transactionJSON = new ObjectMapper().writeValueAsString(transaction);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(reqUrl))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(transactionJSON))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        System.out.println(response.statusCode());
+    }
+
     private static String getSignature(String signable, PrivateKey key) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, SignatureException, InvalidKeyException, IOException, KeyStoreException, CertificateException, UnrecoverableKeyException {
         return Base64.encodeBase64String(sign(signable.getBytes(StandardCharsets.UTF_8), key));
     }
@@ -159,6 +181,14 @@ public class Client {
         System.out.println(getGlobalLedgerValue());
 
         System.out.println(getTotalValue(new String[]{accs[0].getAccountId(), accs[1].getAccountId()}));
+
+        for (int i = 1; i < MAX; i++) {
+            sendAsyncTransaction(new Transaction(accs[0], accs[i], 5.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
+        }
+
+        for (int i = 0; i < MAX; i++) {
+            System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
+        }
     }
 
     private static void initializeAccounts(KeyStore keyStore) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {

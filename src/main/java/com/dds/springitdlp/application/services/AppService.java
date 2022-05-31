@@ -32,6 +32,14 @@ public class AppService {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 
+    public void sendAsyncTransaction(Transaction transaction) {
+        if (Transaction.verify(transaction)) {
+            this.consensusClient.sendAsyncTransaction(transaction);
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
     public double getBalance(String accountId) {
         return this.consensusClient.getBalance(new Account(accountId));
     }

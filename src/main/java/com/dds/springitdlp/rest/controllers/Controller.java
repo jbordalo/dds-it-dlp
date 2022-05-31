@@ -32,6 +32,15 @@ public class Controller {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
+    @PostMapping("/sendAsyncTransaction")
+    public void sendAsyncTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
+        if (transaction.getOrigin().getAccountId().equals(accountId)) {
+            this.service.sendAsyncTransaction(transaction);
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+    }
+
     @GetMapping("/balance")
     public double getBalance(@RequestParam String accountId) {
         return this.service.getBalance(accountId);
