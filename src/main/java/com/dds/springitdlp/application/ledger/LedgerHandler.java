@@ -1,7 +1,6 @@
-package com.dds.springitdlp.application.bftSmart;
+package com.dds.springitdlp.application.ledger;
 
 import com.dds.springitdlp.application.entities.Account;
-import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
 import org.springframework.stereotype.Component;
 

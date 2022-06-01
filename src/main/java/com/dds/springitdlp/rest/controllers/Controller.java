@@ -1,7 +1,7 @@
 package com.dds.springitdlp.rest.controllers;
 
-import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.services.AppService;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,10 +1,10 @@
 package com.dds.springitdlp.application.services;
 
 import com.dds.springitdlp.application.bftSmart.ConsensusClient;
-import com.dds.springitdlp.application.bftSmart.LedgerHandler;
 import com.dds.springitdlp.application.entities.Account;
-import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.LedgerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

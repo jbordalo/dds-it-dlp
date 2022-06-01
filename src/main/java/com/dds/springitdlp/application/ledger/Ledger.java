@@ -1,5 +1,7 @@
-package com.dds.springitdlp.application.entities;
+package com.dds.springitdlp.application.ledger;
 
+import com.dds.springitdlp.application.entities.Account;
+import com.dds.springitdlp.application.entities.Transaction;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -35,11 +37,7 @@ public class Ledger implements Serializable {
      * @return boolean true if transaction went through, false otherwise
      */
     public boolean sendTransaction(Transaction transaction) {
-
-        // TODO
-        if (!Transaction.verify(transaction)) return false;
-
-        if (transaction.getAmount() <= 0) return false;
+        if (!Transaction.verify(transaction) || transaction.getAmount() <= 0) return false;
 
         Account origin = transaction.getOrigin();
         Account destination = transaction.getDestination();
