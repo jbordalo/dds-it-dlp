@@ -2,6 +2,8 @@ package com.dds.client;
 
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.ledger.block.Block;
+import com.dds.springitdlp.application.ledger.merkleTree.MerkleTree;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -17,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 
 public class Client {
 
@@ -164,9 +167,12 @@ public class Client {
 
     public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
         Security.addProvider(new BouncyCastleProvider());
+
         KeyStore keyStore = initializeKeystore();
 
         initializeAccounts(keyStore);
+
+        testBlock();
 
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
@@ -189,6 +195,18 @@ public class Client {
         for (int i = 0; i < MAX; i++) {
             System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
+    }
+
+    private static void testBlock() {
+        ArrayList<Transaction> l = new ArrayList<>(12);
+
+        for (int i = 0; i < 12; i++) {
+            l.add(new Transaction(accs[0], accs[1], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null));
+        }
+
+        Block block = new Block("test", 0, l);
+
+        MerkleTree.printLevelOrderTraversal(block.getHeader().getMerkleRoot());
     }
 
     private static void initializeAccounts(KeyStore keyStore) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {
