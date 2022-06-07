@@ -32,6 +32,12 @@ public class LedgerHandler {
         this.ledgerPath = "ledger" + System.getenv("REPLICA_ID");
     }
 
+    /**
+     * Wrapper function for the Ledger sendTransaction,
+     * persists data if there are no errors.
+     * @param transaction
+     * @return true if there was an error, false otherwise
+     */
     public boolean sendTransaction(Transaction transaction) {
         this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
 

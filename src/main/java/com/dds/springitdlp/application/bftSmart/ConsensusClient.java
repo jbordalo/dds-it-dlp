@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,6 +23,7 @@ import java.util.logging.Logger;
 public class ConsensusClient implements Consensus {
     AsynchServiceProxy serviceProxy;
     Logger logger;
+    private static long TIMEOUT = 10;
 
     public ConsensusClient() {
         this.logger = Logger.getLogger(ConsensusClient.class.getName());
@@ -53,16 +56,16 @@ public class ConsensusClient implements Consensus {
             CompletableFuture<byte[]> future = new CompletableFuture<>();
             this.serviceProxy.invokeAsynchRequest(bytes, new ReplyHandler(serviceProxy, future), TOMMessageType.ORDERED_REQUEST);
 
-//            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            byte[] reply = future.get(TIMEOUT, TimeUnit.SECONDS);
 
-            byte[] reply = future.get();
-            this.logger.log(Level.INFO, Arrays.toString(reply));
+            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
             this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
-        } catch (IOException e) {
+        } catch (IOException | ExecutionException | InterruptedException e) {
             e.printStackTrace();
-        } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
+        } catch (TimeoutException e) {
+            throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT);
         }
     }
 
