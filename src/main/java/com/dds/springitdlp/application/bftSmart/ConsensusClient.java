@@ -1,6 +1,7 @@
 package com.dds.springitdlp.application.bftSmart;
 
 import bftsmart.tom.AsynchServiceProxy;
+import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
@@ -9,7 +10,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +23,7 @@ import java.util.logging.Logger;
 public class ConsensusClient implements Consensus {
     AsynchServiceProxy serviceProxy;
     Logger logger;
+    private static long TIMEOUT = 10;
 
     public ConsensusClient() {
         this.logger = Logger.getLogger(ConsensusClient.class.getName());
@@ -37,6 +44,28 @@ public class ConsensusClient implements Consensus {
             this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void sendAsyncTransaction(Transaction transaction) throws ResponseStatusException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
+            oos.writeObject(transaction);
+            byte[] bytes = bos.toByteArray();
+            CompletableFuture<byte[]> future = new CompletableFuture<>();
+            this.serviceProxy.invokeAsynchRequest(bytes, new ReplyHandler(serviceProxy, future), TOMMessageType.ORDERED_REQUEST);
+
+            byte[] reply = future.get(TIMEOUT, TimeUnit.SECONDS);
+
+            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
+            this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+        } catch (IOException | ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        } catch (TimeoutException e) {
+            throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT);
         }
     }
 
