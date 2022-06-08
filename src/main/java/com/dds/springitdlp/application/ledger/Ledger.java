@@ -13,9 +13,11 @@ import java.util.Map;
 public class Ledger implements Serializable {
     @Getter
     private final Map<Account, List<Transaction>> map;
+    private final List<Transaction> transactionPool;
 
     public Ledger() {
         this.map = new HashMap<>();
+        this.transactionPool = new LinkedList<>();
     }
 
     public double getBalance(Account account) {
@@ -38,6 +40,9 @@ public class Ledger implements Serializable {
      */
     public boolean sendTransaction(Transaction transaction) {
         if (!Transaction.verify(transaction) || transaction.getAmount() <= 0) return false;
+
+        if (!transactionPool.contains(transaction))
+            transactionPool.add(transaction);
 
         Account origin = transaction.getOrigin();
         Account destination = transaction.getDestination();
@@ -69,7 +74,6 @@ public class Ledger implements Serializable {
         destinationList.add(transaction);
 
         originList.add(new Transaction(origin, destination, -transaction.getAmount(), nonce, timestamp, signature));
-
         return true;
     }
 

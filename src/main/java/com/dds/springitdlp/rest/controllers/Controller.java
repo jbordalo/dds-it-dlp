@@ -2,6 +2,7 @@ package com.dds.springitdlp.rest.controllers;
 
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.services.AppService;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,5 +66,10 @@ public class Controller {
     public Ledger getLedger() {
         return service.getLedger();
     }
+
+    @GetMapping("/block")
+    public Block getBlockToMine() { return null; }
+    @PostMapping("/propose")
+    public boolean proposeBlock(@RequestBody Block block) { return false; }
 
 }
