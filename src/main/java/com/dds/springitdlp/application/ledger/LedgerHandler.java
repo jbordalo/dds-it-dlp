@@ -2,6 +2,7 @@ package com.dds.springitdlp.application.ledger;
 
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
@@ -50,10 +51,10 @@ public class LedgerHandler {
     private void persist() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos); FileOutputStream outputStream = new FileOutputStream(System.getenv("STORAGE_PATH") + this.ledgerPath)) {
             oos.writeObject(this.ledger);
-            logger.log(Level.INFO, "persist@Server: persisting ledger");
+            this.logger.log(Level.INFO, "persist@Server: persisting ledger");
             outputStream.write(bos.toByteArray());
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "persist@Server: error while persisting ledger");
+            this.logger.log(Level.SEVERE, "persist@Server: error while persisting ledger");
             e.printStackTrace();
         }
     }
@@ -88,5 +89,17 @@ public class LedgerHandler {
 
     public void setLedger(Ledger ledger) {
         this.ledger = ledger;
+    }
+
+    public Block getBlock() {
+        return this.ledger.getBlock();
+    }
+
+    private boolean checkBlock(Block block) {
+        return true;
+    }
+
+    public boolean proposeBlock(Block block) {
+        return this.checkBlock(block);
     }
 }

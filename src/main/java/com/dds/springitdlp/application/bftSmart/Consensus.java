@@ -3,6 +3,7 @@ package com.dds.springitdlp.application.bftSmart;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -21,4 +22,6 @@ public interface Consensus {
     double getTotalValue(List<Account> accounts);
 
     double getGlobalLedgerValue();
+
+    boolean proposeBlock(Block block);
 }

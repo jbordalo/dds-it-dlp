@@ -85,7 +85,7 @@ public class MerkleTree {
         }
     }
 
-    private static String hash(String input) {
+    public static String hash(String input) {
         MessageDigest hash;
         try {
             hash = MessageDigest.getInstance("SHA-256");

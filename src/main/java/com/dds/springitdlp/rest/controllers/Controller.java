@@ -64,12 +64,18 @@ public class Controller {
 
     @GetMapping("/ledger")
     public Ledger getLedger() {
-        return service.getLedger();
+        return this.service.getLedger();
     }
 
     @GetMapping("/block")
-    public Block getBlockToMine() { return null; }
+    public Block getBlockToMine() {
+        Block block = this.service.getBlock();
+        if (block == null) throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+
+        return block;
+    }
+
     @PostMapping("/propose")
-    public boolean proposeBlock(@RequestBody Block block) { return false; }
+    public boolean proposeBlock(@RequestBody Block block) { return this.service.proposeBlock(block); }
 
 }

@@ -5,6 +5,7 @@ import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
+import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -62,5 +63,13 @@ public class AppService {
 
     public Ledger getLedger() {
         return this.consensusClient.getLedger();
+    }
+
+    public Block getBlock() {
+        return this.ledgerHandler.getBlock();
+    }
+
+    public boolean proposeBlock(Block block) {
+        return this.consensusClient.proposeBlock(block);
     }
 }

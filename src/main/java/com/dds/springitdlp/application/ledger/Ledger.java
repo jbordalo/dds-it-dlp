@@ -2,22 +2,24 @@ package com.dds.springitdlp.application.ledger;
 
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.ledger.block.Block;
+import com.dds.springitdlp.application.ledger.merkleTree.MerkleTree;
 import lombok.Getter;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+@Getter
 public class Ledger implements Serializable {
-    @Getter
     private final Map<Account, List<Transaction>> map;
     private final List<Transaction> transactionPool;
+    private final List<Block> blockchain;
 
     public Ledger() {
         this.map = new HashMap<>();
         this.transactionPool = new LinkedList<>();
+        this.blockchain = new LinkedList<>();
+        this.blockchain.add(Block.genesisBlock());
     }
 
     public double getBalance(Account account) {
@@ -79,5 +81,16 @@ public class Ledger implements Serializable {
 
     public List<Transaction> getExtract(Account account) {
         return this.map.get(account);
+    }
+
+    public Block getBlock() {
+        if (this.transactionPool.size() < Block.MIN_TRANSACTIONS_BLOCK) return null;
+
+        // TODO remove from transaction pool (after it is confirmed as a block)
+        List<Transaction> transactions = this.transactionPool.subList(0, Block.MIN_TRANSACTIONS_BLOCK);
+
+        Block lastBlock = this.blockchain.get(this.blockchain.size() - 1);
+        // TODO move hash to a better place and maybe hash the bytes instead of the string
+        return new Block(MerkleTree.hash(lastBlock.toString()),0, new ArrayList<>(transactions));
     }
 }

@@ -5,6 +5,7 @@ import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,7 +24,7 @@ import java.util.logging.Logger;
 public class ConsensusClient implements Consensus {
     AsynchServiceProxy serviceProxy;
     Logger logger;
-    private static long TIMEOUT = 10;
+    private final long TIMEOUT = 10;
 
     public ConsensusClient() {
         this.logger = Logger.getLogger(ConsensusClient.class.getName());
@@ -79,11 +80,12 @@ public class ConsensusClient implements Consensus {
             objOut.flush();
             byteOut.flush();
 
-            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+            byte[] reply = this.serviceProxy.invokeUnordered(byteOut.toByteArray());
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
-                return (Ledger) objIn.readObject();
+                Ledger a = (Ledger) objIn.readObject();
+                return a; // (Ledger) objIn.readObject();
             }
         } catch (IOException | ClassNotFoundException e) {
             this.logger.log(Level.SEVERE, "error while retrieving ledger", e);
@@ -196,5 +198,23 @@ public class ConsensusClient implements Consensus {
             this.logger.log(Level.SEVERE, "error while calculating global value", e);
         }
         return -1.0;
+    }
+
+    @Override
+    public boolean proposeBlock(Block block) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(LedgerRequestType.PROPOSE_BLOCK);
+            oos.writeObject(block);
+
+            byte[] bytes = bos.toByteArray();
+            byte[] reply = serviceProxy.invokeOrdered(bytes);
+
+            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
+            this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

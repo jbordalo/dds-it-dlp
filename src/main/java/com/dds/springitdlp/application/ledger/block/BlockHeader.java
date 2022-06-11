@@ -4,9 +4,11 @@ import com.dds.springitdlp.application.ledger.merkleTree.Node;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @RequiredArgsConstructor
-public class BlockHeader {
+public class BlockHeader implements Serializable {
     private final byte version = 0x01;
     private final String previousHash;
     private final Node merkleRoot;

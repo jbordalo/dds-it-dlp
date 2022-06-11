@@ -174,6 +174,12 @@ public class Client {
 
         testBlock();
 
+//        Block block = (Block) getBlock();
+
+        String b = getBlock();
+
+        if (b != null) System.out.println(b);
+
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
@@ -197,6 +203,9 @@ public class Client {
         }
     }
 
+    /**
+     * @Remove Testing blocks, not for client
+     */
     private static void testBlock() {
         ArrayList<Transaction> l = new ArrayList<>(12);
 
@@ -207,6 +216,21 @@ public class Client {
         Block block = new Block("test", 0, l);
 
         MerkleTree.printLevelOrderTraversal(block.getHeader().getMerkleRoot());
+    }
+
+    private static String getBlock() throws URISyntaxException, IOException, InterruptedException {
+        String reqUrl = URL + "/block";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(reqUrl))
+                .header("Content-Type", "application/json")
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        System.out.println(response.statusCode());
+        return response.statusCode() == 200 ? response.body() : null;
     }
 
     private static void initializeAccounts(KeyStore keyStore) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {

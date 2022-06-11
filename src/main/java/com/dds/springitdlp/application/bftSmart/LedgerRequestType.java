@@ -6,5 +6,6 @@ public enum LedgerRequestType {
     GET_BALANCE,
     GET_EXTRACT,
     GET_TOTAL_VALUE,
-    GET_GLOBAL_LEDGER_VALUE
+    GET_GLOBAL_LEDGER_VALUE,
+    PROPOSE_BLOCK
 }
