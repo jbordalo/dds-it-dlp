@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -207,11 +206,11 @@ public class ConsensusClient implements Consensus {
             oos.writeObject(block);
 
             byte[] bytes = bos.toByteArray();
-            byte[] reply = serviceProxy.invokeOrdered(bytes);
+            byte[] reply = this.serviceProxy.invokeOrdered(bytes);
 
             if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
-            this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+            this.logger.log(Level.INFO, "proposeBlock@Client: proposed block");
         } catch (IOException e) {
             e.printStackTrace();
         }

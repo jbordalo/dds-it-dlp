@@ -75,7 +75,9 @@ public class Controller {
         return block;
     }
 
-    @PostMapping("/propose")
-    public boolean proposeBlock(@RequestBody Block block) { return this.service.proposeBlock(block); }
+    @PostMapping("/proposeBlock")
+    public boolean proposeBlock(@RequestBody Block block) {
+        return this.service.proposeBlock(block);
+    }
 
 }

@@ -91,6 +91,6 @@ public class Ledger implements Serializable {
 
         Block lastBlock = this.blockchain.get(this.blockchain.size() - 1);
         // TODO move hash to a better place and maybe hash the bytes instead of the string
-        return new Block(MerkleTree.hash(lastBlock.toString()),0, new ArrayList<>(transactions));
+        return new Block(MerkleTree.hash(lastBlock.toString()), 0, new ArrayList<>(transactions));
     }
 }

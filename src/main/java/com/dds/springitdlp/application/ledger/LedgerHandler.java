@@ -35,6 +35,7 @@ public class LedgerHandler {
     /**
      * Wrapper function for the Ledger sendTransaction,
      * persists data if there are no errors.
+     *
      * @param transaction
      * @return true if there was an error, false otherwise
      */
@@ -95,11 +96,7 @@ public class LedgerHandler {
         return this.ledger.getBlock();
     }
 
-    private boolean checkBlock(Block block) {
-        return true;
-    }
-
     public boolean proposeBlock(Block block) {
-        return this.checkBlock(block);
+        return Block.checkBlock(block);
     }
 }

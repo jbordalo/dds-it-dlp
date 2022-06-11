@@ -1,18 +1,39 @@
 package com.dds.springitdlp.application.ledger.block;
 
 import com.dds.springitdlp.application.ledger.merkleTree.Node;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serializable;
 
-@Data
-@RequiredArgsConstructor
+@Getter
+@NoArgsConstructor
 public class BlockHeader implements Serializable {
     private final byte version = 0x01;
-    private final String previousHash;
-    private final Node merkleRoot;
-    private final long timestamp;
-    private final long difficulty;
+    private String previousHash;
+    private Node merkleRoot;
+    private long timestamp;
+    private long difficulty;
+    @Setter
     private int nonce;
+
+    public BlockHeader(String previousHash, Node merkleRoot, long timestamp, long difficulty) {
+        this.previousHash = previousHash;
+        this.merkleRoot = merkleRoot;
+        this.timestamp = timestamp;
+        this.difficulty = difficulty;
+    }
+
+    @Override
+    public String toString() {
+        return "BlockHeader{" +
+                "version=" + version +
+                ", previousHash='" + previousHash + '\'' +
+                ", merkleRoot=" + merkleRoot +
+                ", timestamp=" + timestamp +
+                ", difficulty=" + difficulty +
+                ", nonce=" + nonce +
+                '}';
+    }
 }

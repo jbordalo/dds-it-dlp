@@ -172,35 +172,51 @@ public class Client {
 
         initializeAccounts(keyStore);
 
-        testBlock();
-
-//        Block block = (Block) getBlock();
-
-        String b = getBlock();
-
-        if (b != null) System.out.println(b);
-
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
             System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
 
-        System.out.println(getLedger());
-
-        System.out.println(getExtract(accs[0].getAccountId(), keys[0]));
-
-        System.out.println(getGlobalLedgerValue());
-
-        System.out.println(getTotalValue(new String[]{accs[0].getAccountId(), accs[1].getAccountId()}));
+//        System.out.println(getLedger());
+//
+//        System.out.println(getExtract(accs[0].getAccountId(), keys[0]));
+//
+//        System.out.println(getGlobalLedgerValue());
+//
+//        System.out.println(getTotalValue(new String[]{accs[0].getAccountId(), accs[1].getAccountId()}));
 
         for (int i = 1; i < MAX; i++) {
             sendAsyncTransaction(new Transaction(accs[0], accs[i], 5.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
         }
 
-        for (int i = 0; i < MAX; i++) {
-            System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
-        }
+        Block b = getBlock();
+
+        if (b == null) System.out.println("Couldn't get a block");
+
+        proposeBlock(b);
+
+//        for (int i = 0; i < MAX; i++) {
+//            System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
+//        }
+    }
+
+    private static void proposeBlock(Block block) throws URISyntaxException, IOException, InterruptedException {
+        String reqUrl = URL + "/proposeBlock";
+
+        String blockJSON = new ObjectMapper().writeValueAsString(block);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(reqUrl))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(blockJSON))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        System.out.println(response.statusCode());
     }
 
     /**
@@ -218,7 +234,7 @@ public class Client {
         MerkleTree.printLevelOrderTraversal(block.getHeader().getMerkleRoot());
     }
 
-    private static String getBlock() throws URISyntaxException, IOException, InterruptedException {
+    private static Block getBlock() throws URISyntaxException, IOException, InterruptedException {
         String reqUrl = URL + "/block";
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -230,7 +246,22 @@ public class Client {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         System.out.println(response.statusCode());
-        return response.statusCode() == 200 ? response.body() : null;
+
+        if (response.statusCode() != 200) return null;
+
+        Block block = new ObjectMapper().readValue(response.body(), Block.class);
+
+        return mineBlock(block);
+    }
+
+    private static Block mineBlock(Block block) {
+        int i = 0;
+        while (true) {
+            block.getHeader().setNonce(i);
+            if (Block.checkBlock(block)) break;
+            i++;
+        }
+        return block;
     }
 
     private static void initializeAccounts(KeyStore keyStore) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {
