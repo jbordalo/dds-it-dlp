@@ -92,6 +92,7 @@ public class ConsensusServer extends DefaultSingleRecoverable implements Command
                 case GET_LEDGER -> {
                     try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
                         Ledger ledger = this.ledgerHandler.getLedger();
+
                         oos.writeObject(ledger);
                         oos.flush();
 

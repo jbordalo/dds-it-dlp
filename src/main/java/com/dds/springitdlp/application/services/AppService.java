@@ -70,7 +70,9 @@ public class AppService {
     }
 
     public boolean proposeBlock(Block block) {
-        if (Block.checkBlock(block)) return this.consensusClient.proposeBlock(block);
-        return false;
+        if (!Block.checkBlock(block)) return false;
+        if (this.ledgerHandler.hasBlock(block)) return false;
+
+        return this.consensusClient.proposeBlock(block);
     }
 }

@@ -83,8 +83,7 @@ public class ConsensusClient implements Consensus {
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
-                Ledger a = (Ledger) objIn.readObject();
-                return a; // (Ledger) objIn.readObject();
+                return (Ledger) objIn.readObject();
             }
         } catch (IOException | ClassNotFoundException e) {
             this.logger.log(Level.SEVERE, "error while retrieving ledger", e);
@@ -210,7 +209,7 @@ public class ConsensusClient implements Consensus {
 
             if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
-            this.logger.log(Level.INFO, "proposeBlock@Client: proposed block");
+            this.logger.log(Level.INFO, "proposeBlock@Client: installed proposed block");
         } catch (IOException e) {
             e.printStackTrace();
         }

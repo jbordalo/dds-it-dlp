@@ -97,6 +97,14 @@ public class LedgerHandler {
     }
 
     public boolean proposeBlock(Block block) {
-        return Block.checkBlock(block);
+        if (Block.checkBlock(block) && !this.hasBlock(block)) {
+            this.ledger.addBlock(block);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean hasBlock(Block block) {
+        return this.ledger.hasBlock(block);
     }
 }

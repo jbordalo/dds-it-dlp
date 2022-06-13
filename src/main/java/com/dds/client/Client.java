@@ -177,6 +177,7 @@ public class Client {
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
             System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
 
@@ -197,6 +198,11 @@ public class Client {
         if (b == null) System.out.println("Couldn't get a block");
 
         proposeBlock(b);
+
+
+        Thread.sleep(5000);
+
+        System.out.println(getLedger());
 
 //        for (int i = 0; i < MAX; i++) {
 //            System.out.println(getBalance(accs[i].getAccountId(), keys[i]));

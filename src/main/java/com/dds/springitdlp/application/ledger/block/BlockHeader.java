@@ -11,6 +11,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class BlockHeader implements Serializable {
     private final byte version = 0x01;
+
     private String previousHash;
     private Node merkleRoot;
     private long timestamp;
