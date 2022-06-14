@@ -17,18 +17,19 @@ import java.util.Objects;
 @NoArgsConstructor
 public class Transaction implements Serializable {
 
-    public static final double INITIAL_VALUE = 100.0;
+    public static final double MINING_REWARD = 100.0;
 
     private Account origin;
     private Account destination;
     private double amount;
     private int nonce;
+
     private long timestamp;
 
     private String signature;
 
-    public static Transaction SYS_INIT(Account account) {
-        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.INITIAL_VALUE, 0, 0, null);
+    public static Transaction REWARD_TRANSACTION(Account account) {
+        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.MINING_REWARD, 0, 0, null);
     }
 
     @Override

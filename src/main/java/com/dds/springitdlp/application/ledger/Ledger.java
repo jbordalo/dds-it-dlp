@@ -55,7 +55,7 @@ public class Ledger implements Serializable {
         List<Transaction> originList = this.map.get(origin);
         if (originList == null) {
             originList = new LinkedList<>();
-            originList.add(Transaction.SYS_INIT(origin));
+            originList.add(Transaction.REWARD_TRANSACTION(origin));
             this.map.put(origin, originList);
         } else {
             if (originList.contains(transaction)) {
@@ -69,7 +69,7 @@ public class Ledger implements Serializable {
         List<Transaction> destinationList = this.map.get(destination);
         if (destinationList == null) {
             destinationList = new LinkedList<>();
-            destinationList.add(Transaction.SYS_INIT(destination));
+            destinationList.add(Transaction.REWARD_TRANSACTION(destination));
             this.map.put(destination, destinationList);
         }
 
@@ -87,7 +87,7 @@ public class Ledger implements Serializable {
     public Block getBlock(Account account) {
         // if first block, mine the genesis block
         if (this.blockchain.size() == 0) {
-            Transaction rewardTransaction = Transaction.SYS_INIT(account);
+            Transaction rewardTransaction = Transaction.REWARD_TRANSACTION(account);
             return Block.genesisBlock(rewardTransaction);
         }
 
@@ -96,7 +96,7 @@ public class Ledger implements Serializable {
         List<Transaction> transactions = this.transactionPool.subList(0, Block.MIN_TRANSACTIONS_BLOCK - 1);
 
         // this is the reward transaction
-        transactions.add(Transaction.SYS_INIT(account));
+        transactions.add(Transaction.REWARD_TRANSACTION(account));
 
         Block lastBlock = this.blockchain.get(this.blockchain.size() - 1);
 
