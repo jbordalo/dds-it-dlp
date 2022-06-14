@@ -65,7 +65,7 @@ public class LedgerHandler {
     }
 
     public double getBalance(Account account) {
-        return this.ledger.getBalance(account);
+return this.ledger.getBalance(account);
     }
 
     public double getGlobalLedgerValue() {
@@ -85,6 +85,7 @@ public class LedgerHandler {
         for (Account a : list) {
             total += Math.max(this.ledger.getBalance(a), 0.0);
         }
+
         return total;
     }
 

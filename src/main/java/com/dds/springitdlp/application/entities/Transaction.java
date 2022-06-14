@@ -29,7 +29,7 @@ public class Transaction implements Serializable {
     private String signature;
 
     public static Transaction REWARD_TRANSACTION(Account account) {
-        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.MINING_REWARD, 0, 0, null);
+        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.MINING_REWARD * 10, 0, 0, null);
     }
 
     @Override

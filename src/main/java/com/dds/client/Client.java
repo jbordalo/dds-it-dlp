@@ -172,19 +172,40 @@ public class Client {
         initializeAccounts(keyStore);
 
         // Try to mine the first block (blockchain could be empty)
-        Block b = getBlock(accs[1], keys[1]);
+        System.out.println("Mining genesis");
+
+        Block b = getBlock(accs[0], keys[0]);
 
         if (b == null) System.out.println("Couldn't get a block");
 
         proposeBlock(b);
 
+        // Have the account that mined transfer money to more accounts
+        // This creates money in some accounts for testing
+        System.out.println("Doing a communist");
+        for (int i = 1; i < MAX; i++) {
+            // Doing 4 * 12.5 instead of 50 so we can add extra transactions and are able to mine a block
+            sendTransaction(new Transaction(accs[0], accs[i], 12.5, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
+            sendTransaction(new Transaction(accs[0], accs[i], 12.5, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
+            sendTransaction(new Transaction(accs[0], accs[i], 12.5, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
+            sendTransaction(new Transaction(accs[0], accs[i], 12.5, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
+        }
+
+        System.out.println("Mining new block");
+
+        b = getBlock(accs[0], keys[0]);
+
+        if (b == null) System.out.println("Couldn't get a block");
+
+        proposeBlock(b);
+
+        System.out.println("One for all");
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
-            System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
 
 //        System.out.println(getLedger());
@@ -195,10 +216,13 @@ public class Client {
 //
 //        System.out.println(getTotalValue(new String[]{accs[0].getAccountId(), accs[1].getAccountId()}));
 
+
+        System.out.println("One for all async");
         for (int i = 1; i < MAX; i++) {
             sendAsyncTransaction(new Transaction(accs[0], accs[i], 5.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
         }
 
+        System.out.println("Mining another block");
         b = getBlock(accs[2], keys[2]);
 
         if (b == null) System.out.println("Couldn't get a block");
@@ -210,9 +234,10 @@ public class Client {
 
         System.out.println(getLedger());
 
-//        for (int i = 0; i < MAX; i++) {
-//            System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
-//        }
+        System.out.println("Final balances");
+        for (int i = 0; i < MAX; i++) {
+            System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
+        }
     }
 
     private static void proposeBlock(Block block) throws URISyntaxException, IOException, InterruptedException {

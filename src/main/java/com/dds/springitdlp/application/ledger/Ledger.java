@@ -25,13 +25,14 @@ public class Ledger implements Serializable {
 
     public double getBalance(Account account) {
         double balance = 0;
-        List<Transaction> transactions = this.map.get(account);
 
-        if (transactions == null) return -1.0;
-
-        for (Transaction transaction : transactions) {
-            balance += transaction.getAmount();
+        for (Block b : blockchain) {
+            for (Transaction transaction : b.getTransactions()) {
+                if (transaction.getOrigin().equals(account)) balance -= transaction.getAmount();
+                else if (transaction.getDestination().equals(account)) balance += transaction.getAmount();
+            }
         }
+
         return balance;
     }
 
@@ -44,39 +45,12 @@ public class Ledger implements Serializable {
     public boolean sendTransaction(Transaction transaction) {
         if (!Transaction.verify(transaction) || transaction.getAmount() <= 0) return false;
 
+        if (this.getBalance(transaction.getOrigin()) < transaction.getAmount()) return false;
+
+        // TODO address double spending by checking on the blockchain too
         if (!transactionPool.contains(transaction))
             transactionPool.add(transaction);
 
-        Account origin = transaction.getOrigin();
-        Account destination = transaction.getDestination();
-        int nonce = transaction.getNonce();
-        long timestamp = transaction.getTimestamp();
-        String signature = transaction.getSignature();
-
-        List<Transaction> originList = this.map.get(origin);
-        if (originList == null) {
-            originList = new LinkedList<>();
-            originList.add(Transaction.REWARD_TRANSACTION(origin));
-            this.map.put(origin, originList);
-        } else {
-            if (originList.contains(transaction)) {
-                System.out.println("Repeated transaction");
-                return true;
-            }
-        }
-
-        if (this.getBalance(origin) < transaction.getAmount()) return false;
-
-        List<Transaction> destinationList = this.map.get(destination);
-        if (destinationList == null) {
-            destinationList = new LinkedList<>();
-            destinationList.add(Transaction.REWARD_TRANSACTION(destination));
-            this.map.put(destination, destinationList);
-        }
-
-        destinationList.add(transaction);
-
-        originList.add(new Transaction(origin, destination, -transaction.getAmount(), nonce, timestamp, signature));
         return true;
     }
 
