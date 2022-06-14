@@ -55,7 +55,13 @@ public class Ledger implements Serializable {
     }
 
     public List<Transaction> getExtract(Account account) {
-        return this.map.get(account);
+        List<Transaction> extract = new LinkedList<>();
+        for (Block b : blockchain) {
+            for (Transaction transaction : b.getTransactions()) {
+                if (transaction.getOrigin().equals(account) || transaction.getDestination().equals(account)) extract.add(transaction);
+            }
+        }
+        return extract;
     }
 
     @JsonIgnore

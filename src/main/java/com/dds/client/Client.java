@@ -199,6 +199,8 @@ public class Client {
 
         proposeBlock(b);
 
+        System.out.println(getExtract(accs[0].getAccountId(), keys[0]));
+
         System.out.println("One for all");
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
