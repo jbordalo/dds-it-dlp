@@ -26,7 +26,7 @@ public class Block implements Serializable {
     }
 
     public static Block genesisBlock(Transaction rewardTransaction) {
-        return new Block("", BlockHeader.DEFAULT_DIFFICULTY, 0, new ArrayList<>(Collections.singletonList(rewardTransaction)));
+        return new Block("", BlockHeader.DEFAULT_DIFFICULTY, System.currentTimeMillis(), new ArrayList<>(Collections.singletonList(rewardTransaction)));
     }
 
     /**
