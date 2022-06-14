@@ -20,7 +20,6 @@ public class Ledger implements Serializable {
         this.map = new HashMap<>();
         this.transactionPool = new LinkedList<>();
         this.blockchain = new LinkedList<>();
-        this.blockchain.add(Block.genesisBlock());
     }
 
     public double getBalance(Account account) {
@@ -85,7 +84,13 @@ public class Ledger implements Serializable {
     }
 
     @JsonIgnore
-    public Block getBlock() {
+    public Block getBlock(Account account) {
+        // if first block, mine the genesis block
+        if (this.blockchain.size() == 0) {
+            Transaction rewardTransaction = Transaction.SYS_INIT(account);
+            return Block.genesisBlock(rewardTransaction);
+        }
+
         if (this.transactionPool.size() < Block.MIN_TRANSACTIONS_BLOCK) return null;
 
         List<Transaction> transactions = this.transactionPool.subList(0, Block.MIN_TRANSACTIONS_BLOCK);

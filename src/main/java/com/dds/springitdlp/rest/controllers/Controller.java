@@ -3,6 +3,7 @@ package com.dds.springitdlp.rest.controllers;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
+import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.application.services.AppService;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,9 +68,9 @@ public class Controller {
         return this.service.getLedger();
     }
 
-    @GetMapping("/block")
-    public Block getBlockToMine() {
-        Block block = this.service.getBlock();
+    @PostMapping("/block")
+    public Block getBlockToMine(@RequestBody BlockRequest blockRequest) {
+        Block block = this.service.getBlock(blockRequest);
         if (block == null) throw new ResponseStatusException(HttpStatus.NO_CONTENT);
 
         return block;

@@ -12,7 +12,7 @@ import java.util.Collections;
 @NoArgsConstructor
 @Getter
 public class Block implements Serializable {
-    public static final int MIN_TRANSACTIONS_BLOCK = 12;
+    public static final int MIN_TRANSACTIONS_BLOCK = 8;
     private BlockHeader header;
     private ArrayList<Transaction> transactions;
 
@@ -25,18 +25,18 @@ public class Block implements Serializable {
         this(previousHash, difficulty, System.currentTimeMillis(), transactions);
     }
 
-    public static Block genesisBlock() {
-        return new Block("", 1, 0, new ArrayList<>(Collections.singletonList(new Transaction())));
+    public static Block genesisBlock(Transaction rewardTransaction) {
+        return new Block("", 1, 0, new ArrayList<>(Collections.singletonList(rewardTransaction)));
     }
 
     /**
-     * Auxiliary method to check a block
+     * Auxiliary method to check the validity of a block
      *
      * @return true if hash is fine, false otherwise
      */
     public static boolean checkBlock(Block block) {
         String hash = MerkleTree.hash(block.toString());
-        return hash.startsWith("0");
+        return hash.startsWith("0".repeat((int) block.getHeader().getDifficulty()));
     }
 
     @Override

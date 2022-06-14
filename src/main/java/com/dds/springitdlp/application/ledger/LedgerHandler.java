@@ -92,8 +92,8 @@ public class LedgerHandler {
         this.ledger = ledger;
     }
 
-    public Block getBlock() {
-        return this.ledger.getBlock();
+    public Block getBlock(Account account) {
+        return this.ledger.getBlock(account);
     }
 
     public boolean proposeBlock(Block block) {

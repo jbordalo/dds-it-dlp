@@ -3,6 +3,7 @@ package com.dds.client;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.block.Block;
+import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.application.ledger.merkleTree.MerkleTree;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
@@ -172,6 +173,13 @@ public class Client {
 
         initializeAccounts(keyStore);
 
+        // Try to mine the first block (blockchain could be empty)
+        Block b = getBlock(accs[1], keys[1]);
+
+        if (b == null) System.out.println("Couldn't get a block");
+
+        proposeBlock(b);
+
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
@@ -193,14 +201,14 @@ public class Client {
             sendAsyncTransaction(new Transaction(accs[0], accs[i], 5.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
         }
 
-        Block b = getBlock();
+        b = getBlock(accs[2], keys[2]);
 
         if (b == null) System.out.println("Couldn't get a block");
 
         proposeBlock(b);
 
-
-        Thread.sleep(5000);
+        // Ensure block propagation has finished
+        Thread.sleep(2000);
 
         System.out.println(getLedger());
 
@@ -225,13 +233,24 @@ public class Client {
         System.out.println(response.statusCode());
     }
 
-    private static Block getBlock() throws URISyntaxException, IOException, InterruptedException {
+    private static Block getBlock(Account account, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/block";
+
+        // Make a block request
+        BlockRequest blockRequest = new BlockRequest(System.currentTimeMillis(), new SecureRandom().nextInt(), account, "");
+
+        String signable = blockRequest.toString();
+
+        String signature = getSignature(signable, key);
+
+        blockRequest.setSignature(signature);
+
+        String blockRequestJSON = new ObjectMapper().writeValueAsString(blockRequest);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI(reqUrl))
                 .header("Content-Type", "application/json")
-                .GET()
+                .POST(HttpRequest.BodyPublishers.ofString(blockRequestJSON))
                 .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
