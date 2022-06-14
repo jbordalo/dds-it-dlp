@@ -69,7 +69,7 @@ return this.ledger.getBalance(account);
     }
 
     public double getGlobalLedgerValue() {
-        return this.getTotal(this.ledger.getMap().keySet().stream().toList());
+        return this.ledger.getGlobalValue();
     }
 
     public List<Transaction> getExtract(Account account) {
@@ -77,13 +77,10 @@ return this.ledger.getBalance(account);
     }
 
     public double getTotalValue(List<Account> list) {
-        return this.getTotal(list);
-    }
-
-    public double getTotal(List<Account> list) {
         double total = 0.0;
+
         for (Account a : list) {
-            total += Math.max(this.ledger.getBalance(a), 0.0);
+            total += this.ledger.getBalance(a);
         }
 
         return total;

@@ -210,13 +210,11 @@ public class Client {
             sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
         }
 
-//        System.out.println(getLedger());
-//
-//        System.out.println(getExtract(accs[0].getAccountId(), keys[0]));
-//
-//        System.out.println(getGlobalLedgerValue());
-//
-//        System.out.println(getTotalValue(new String[]{accs[0].getAccountId(), accs[1].getAccountId()}));
+        System.out.println(getExtract(accs[0].getAccountId(), keys[0]));
+
+        System.out.println(getGlobalLedgerValue());
+
+        System.out.println(getTotalValue(new String[]{accs[0].getAccountId(), accs[1].getAccountId()}));
 
 
         System.out.println("One for all async");

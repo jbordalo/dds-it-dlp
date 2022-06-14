@@ -13,12 +13,10 @@ import java.util.*;
 
 @Getter
 public class Ledger implements Serializable {
-    private final Map<Account, List<Transaction>> map;
     private final List<Transaction> transactionPool;
     private final List<Block> blockchain;
 
     public Ledger() {
-        this.map = new HashMap<>();
         this.transactionPool = new LinkedList<>();
         this.blockchain = new LinkedList<>();
     }
@@ -95,5 +93,17 @@ public class Ledger implements Serializable {
         for (Transaction transaction : block.getTransactions()) {
             this.transactionPool.remove(transaction);
         }
+    }
+
+    public double getGlobalValue() {
+        double total = 0;
+
+        for (Block b : blockchain) {
+            for (Transaction transaction : b.getTransactions()) {
+                if (transaction.getOrigin().equals(Account.SYSTEM_ACC())) total += transaction.getAmount();
+            }
+        }
+
+        return total;
     }
 }
