@@ -3,6 +3,7 @@ package com.dds.springitdlp.application.ledger;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.block.Block;
+import com.dds.springitdlp.application.ledger.block.BlockHeader;
 import com.dds.springitdlp.application.ledger.merkleTree.MerkleTree;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
@@ -101,7 +102,7 @@ public class Ledger implements Serializable {
         Block lastBlock = this.blockchain.get(this.blockchain.size() - 1);
 
         // TODO move hash to a better place and maybe hash the bytes instead of the string
-        return new Block(MerkleTree.hash(lastBlock.toString()), 1, new ArrayList<>(transactions));
+        return new Block(MerkleTree.hash(lastBlock.toString()), BlockHeader.DEFAULT_DIFFICULTY, new ArrayList<>(transactions));
     }
 
     public boolean hasBlock(Block block) {

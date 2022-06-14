@@ -1,8 +1,10 @@
 package com.dds.springitdlp.application.ledger.block;
 
 import com.dds.springitdlp.application.entities.Account;
-import com.dds.springitdlp.application.entities.Transaction;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.codec.binary.Base64;
 
 import java.nio.charset.StandardCharsets;

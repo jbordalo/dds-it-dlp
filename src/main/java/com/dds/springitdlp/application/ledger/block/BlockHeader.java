@@ -1,6 +1,5 @@
 package com.dds.springitdlp.application.ledger.block;
 
-import com.dds.springitdlp.application.ledger.merkleTree.Node;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,8 +9,9 @@ import java.io.Serializable;
 @Getter
 @NoArgsConstructor
 public class BlockHeader implements Serializable {
-    private final byte version = 0x01;
 
+    public static final long DEFAULT_DIFFICULTY = 1;
+    private final byte version = 0x01;
     private String previousHash;
     private String merkleRoot;
     private long timestamp;
