@@ -91,9 +91,12 @@ public class Ledger implements Serializable {
             return Block.genesisBlock(rewardTransaction);
         }
 
-        if (this.transactionPool.size() < Block.MIN_TRANSACTIONS_BLOCK) return null;
+        if (this.transactionPool.size() < Block.MIN_TRANSACTIONS_BLOCK - 1) return null;
 
-        List<Transaction> transactions = this.transactionPool.subList(0, Block.MIN_TRANSACTIONS_BLOCK);
+        List<Transaction> transactions = this.transactionPool.subList(0, Block.MIN_TRANSACTIONS_BLOCK - 1);
+
+        // this is the reward transaction
+        transactions.add(Transaction.SYS_INIT(account));
 
         Block lastBlock = this.blockchain.get(this.blockchain.size() - 1);
 
