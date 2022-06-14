@@ -225,21 +225,6 @@ public class Client {
         System.out.println(response.statusCode());
     }
 
-    /**
-     * @Remove Testing blocks, not for client
-     */
-    private static void testBlock() {
-        ArrayList<Transaction> l = new ArrayList<>(12);
-
-        for (int i = 0; i < 12; i++) {
-            l.add(new Transaction(accs[0], accs[1], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null));
-        }
-
-        Block block = new Block("test", 0, l);
-
-        MerkleTree.printLevelOrderTraversal(block.getHeader().getMerkleRoot());
-    }
-
     private static Block getBlock() throws URISyntaxException, IOException, InterruptedException {
         String reqUrl = URL + "/block";
 

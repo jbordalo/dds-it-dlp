@@ -17,7 +17,7 @@ public class Block implements Serializable {
     private ArrayList<Transaction> transactions;
 
     public Block(String previousHash, long difficulty, long timestamp, ArrayList<Transaction> transactions) {
-        this.header = new BlockHeader(previousHash, MerkleTree.generateTree(transactions), timestamp, difficulty);
+        this.header = new BlockHeader(previousHash, MerkleTree.generateTree(transactions).getHash(), timestamp, difficulty);
         this.transactions = transactions;
     }
 

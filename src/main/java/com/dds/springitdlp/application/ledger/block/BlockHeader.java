@@ -13,13 +13,13 @@ public class BlockHeader implements Serializable {
     private final byte version = 0x01;
 
     private String previousHash;
-    private Node merkleRoot;
+    private String merkleRoot;
     private long timestamp;
     private long difficulty;
     @Setter
     private int nonce;
 
-    public BlockHeader(String previousHash, Node merkleRoot, long timestamp, long difficulty) {
+    public BlockHeader(String previousHash, String merkleRoot, long timestamp, long difficulty) {
         this.previousHash = previousHash;
         this.merkleRoot = merkleRoot;
         this.timestamp = timestamp;
