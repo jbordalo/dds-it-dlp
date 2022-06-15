@@ -4,9 +4,9 @@ import bftsmart.tom.AsynchServiceProxy;
 import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
-import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
 import com.dds.springitdlp.application.entities.results.TransactionResult;
+import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Component
-public class ConsensusClient implements Consensus {
+public class ConsensusClient implements ConsensusPlane {
     AsynchServiceProxy serviceProxy;
     Logger logger;
     private final long TIMEOUT = 10;

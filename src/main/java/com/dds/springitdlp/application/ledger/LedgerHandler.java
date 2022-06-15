@@ -54,7 +54,8 @@ public class LedgerHandler {
                 !this.ledger.hasBalance(transaction.getOrigin(), transaction.getAmount()))
             return TransactionResult.FAILED_TRANSACTION;
 
-        if (transactionPool.contains(transaction) || this.ledger.transactionInLedger(transaction)) return TransactionResult.REPEATED_TRANSACTION;
+        if (transactionPool.contains(transaction) || this.ledger.transactionInLedger(transaction))
+            return TransactionResult.REPEATED_TRANSACTION;
 
         transactionPool.add(transaction);
 

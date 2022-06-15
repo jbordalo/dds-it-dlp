@@ -2,15 +2,11 @@ package com.dds.springitdlp.application.ledger;
 
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
-import com.dds.springitdlp.application.ledger.block.BlockHeader;
-import com.dds.springitdlp.cryptography.Cryptography;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,6 +56,7 @@ public class Ledger implements Serializable {
 
     /**
      * Checks if transaction is already present in the ledger
+     *
      * @param transaction - Transaction to check
      * @return true if transaction is in the ledger, false otherwise
      */
