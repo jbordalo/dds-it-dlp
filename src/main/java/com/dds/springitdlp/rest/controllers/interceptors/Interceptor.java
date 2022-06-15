@@ -2,16 +2,11 @@ package com.dds.springitdlp.rest.controllers.interceptors;
 
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.cryptography.Cryptography;
-import org.apache.commons.codec.binary.Base64;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.nio.charset.StandardCharsets;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 
 @Component
 public class Interceptor implements HandlerInterceptor {

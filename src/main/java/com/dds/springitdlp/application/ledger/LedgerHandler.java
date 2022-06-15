@@ -36,7 +36,7 @@ public class LedgerHandler {
      * Wrapper function for the Ledger sendTransaction,
      * persists data if there are no errors.
      *
-     * @param transaction
+     * @param transaction transaction to be handled
      * @return true if there was an error, false otherwise
      */
     public boolean sendTransaction(Transaction transaction) {
@@ -65,7 +65,7 @@ public class LedgerHandler {
     }
 
     public double getBalance(Account account) {
-return this.ledger.getBalance(account);
+        return this.ledger.getBalance(account);
     }
 
     public double getGlobalLedgerValue() {

@@ -18,7 +18,6 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.security.spec.InvalidKeySpecException;
 
 public class Client {
 
@@ -29,7 +28,7 @@ public class Client {
     private static PrivateKey[] keys;
     private static Account[] accs;
 
-    public static byte[] sign(byte[] data, PrivateKey key) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, SignatureException, InvalidKeyException, IOException, KeyStoreException, CertificateException, UnrecoverableKeyException {
+    public static byte[] sign(byte[] data, PrivateKey key) throws NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
 
         signature.initSign(key, new SecureRandom());
@@ -38,7 +37,7 @@ public class Client {
         return signature.sign();
     }
 
-    public static String getBalance(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
+    public static String getBalance(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/balance?accountId=" + accountId;
 
         String signable = "GET " + reqUrl + " " + ALGORITHM;
@@ -98,7 +97,7 @@ public class Client {
         return response.body();
     }
 
-    public static String getExtract(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
+    public static String getExtract(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/extract?accountId=" + accountId;
 
         String signable = "GET " + reqUrl + " " + ALGORITHM;
@@ -116,7 +115,7 @@ public class Client {
         return response.body();
     }
 
-    public static void sendTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
+    public static void sendTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/sendTransaction?accountId=" + transaction.getOrigin().getAccountId();
 
         String signable = transaction.toString();
@@ -138,7 +137,7 @@ public class Client {
         System.out.println(response.statusCode());
     }
 
-    public static void sendAsyncTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
+    public static void sendAsyncTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/sendAsyncTransaction?accountId=" + transaction.getOrigin().getAccountId();
 
         String signable = transaction.toString();
@@ -160,11 +159,11 @@ public class Client {
         System.out.println(response.statusCode());
     }
 
-    private static String getSignature(String signable, PrivateKey key) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, SignatureException, InvalidKeyException, IOException, KeyStoreException, CertificateException, UnrecoverableKeyException {
+    private static String getSignature(String signable, PrivateKey key) throws NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         return Base64.encodeBase64String(sign(signable.getBytes(StandardCharsets.UTF_8), key));
     }
 
-    public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
+    public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
         Security.addProvider(new BouncyCastleProvider());
 
         KeyStore keyStore = initializeKeystore();
@@ -256,7 +255,7 @@ public class Client {
         System.out.println(response.statusCode());
     }
 
-    private static Block getBlock(Account account, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, KeyStoreException, NoSuchProviderException, InvalidKeyException {
+    private static Block getBlock(Account account, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/block";
 
         // Make a block request

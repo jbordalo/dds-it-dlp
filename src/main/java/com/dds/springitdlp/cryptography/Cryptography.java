@@ -1,6 +1,5 @@
 package com.dds.springitdlp.cryptography;
 
-import com.dds.springitdlp.application.entities.Transaction;
 import org.apache.commons.codec.binary.Base64;
 
 import java.nio.charset.StandardCharsets;
@@ -25,5 +24,15 @@ public class Cryptography {
                  InvalidKeySpecException e) {
             return false;
         }
+    }
+
+    public static String hash(String input) {
+        MessageDigest hash;
+        try {
+            hash = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        return java.util.Base64.getEncoder().encodeToString(hash.digest(input.getBytes()));
     }
 }

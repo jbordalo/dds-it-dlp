@@ -3,11 +3,9 @@ package com.dds.springitdlp.application.ledger.merkleTree;
 // Reference: https://gist.github.com/pranaybathini/e3bb4e6ca6bc387b58e534e370033c05
 
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.cryptography.Cryptography;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -16,7 +14,7 @@ public class MerkleTree {
         ArrayList<Node> childNodes = new ArrayList<>();
 
         for (Transaction transaction : dataBlocks) {
-            childNodes.add(new Node(null, null, hash(transaction.toString())));
+            childNodes.add(new Node(null, null, Cryptography.hash(transaction.toString())));
         }
 
         return buildTree(childNodes);
@@ -37,7 +35,7 @@ public class MerkleTree {
                     rightChild = new Node(null, null, leftChild.getHash());
                 }
 
-                String parentHash = hash(leftChild.getHash() + rightChild.getHash());
+                String parentHash = Cryptography.hash(leftChild.getHash() + rightChild.getHash());
                 parents.add(new Node(leftChild, rightChild, parentHash));
                 index += 2;
             }
@@ -83,15 +81,5 @@ public class MerkleTree {
                 queue.add(node.getRight());
             }
         }
-    }
-
-    public static String hash(String input) {
-        MessageDigest hash;
-        try {
-            hash = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-        return Base64.getEncoder().encodeToString(hash.digest(input.getBytes()));
     }
 }

@@ -4,13 +4,8 @@ import com.dds.springitdlp.cryptography.Cryptography;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.codec.binary.Base64;
 
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Objects;
 
 @Data
@@ -30,6 +25,7 @@ public class Transaction implements Serializable {
 
     /**
      * Special transaction for the reward miners get
+     *
      * @param account - account that gets the reward
      * @return reward Transaction
      */

@@ -2,6 +2,7 @@ package com.dds.springitdlp.application.ledger.block;
 
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.merkleTree.MerkleTree;
+import com.dds.springitdlp.cryptography.Cryptography;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -31,7 +32,7 @@ public class Block implements Serializable {
      * @return true if hash is fine, false otherwise
      */
     public static boolean checkBlock(Block block) {
-        String hash = MerkleTree.hash(block.toString());
+        String hash = Cryptography.hash(block.toString());
         return hash.startsWith("0".repeat((int) block.getHeader().getDifficulty()));
     }
 

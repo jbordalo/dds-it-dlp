@@ -4,12 +4,14 @@ import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockHeader;
-import com.dds.springitdlp.application.ledger.merkleTree.MerkleTree;
+import com.dds.springitdlp.cryptography.Cryptography;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 @Getter
 public class Ledger implements Serializable {
@@ -56,7 +58,8 @@ public class Ledger implements Serializable {
         List<Transaction> extract = new LinkedList<>();
         for (Block b : blockchain) {
             for (Transaction transaction : b.getTransactions()) {
-                if (transaction.getOrigin().equals(account) || transaction.getDestination().equals(account)) extract.add(transaction);
+                if (transaction.getOrigin().equals(account) || transaction.getDestination().equals(account))
+                    extract.add(transaction);
             }
         }
         return extract;
@@ -79,8 +82,7 @@ public class Ledger implements Serializable {
 
         Block lastBlock = this.blockchain.get(this.blockchain.size() - 1);
 
-        // TODO move hash to a better place and maybe hash the bytes instead of the string
-        return new Block(MerkleTree.hash(lastBlock.toString()), BlockHeader.DEFAULT_DIFFICULTY, new ArrayList<>(transactions));
+        return new Block(Cryptography.hash(lastBlock.toString()), BlockHeader.DEFAULT_DIFFICULTY, new ArrayList<>(transactions));
     }
 
     public boolean hasBlock(Block block) {
