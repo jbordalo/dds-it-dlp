@@ -15,6 +15,7 @@ import java.util.List;
 
 @Getter
 public class Ledger implements Serializable {
+    @JsonIgnore
     private final List<Transaction> transactionPool;
     private final List<Block> blockchain;
 
@@ -97,6 +98,7 @@ public class Ledger implements Serializable {
         }
     }
 
+    @JsonIgnore
     public double getGlobalValue() {
         double total = 0;
 
