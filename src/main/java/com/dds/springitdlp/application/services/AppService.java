@@ -43,11 +43,11 @@ public class AppService {
     }
 
     public double getBalance(String accountId) {
-        return this.consensusClient.getBalance(new Account(accountId));
+        return this.ledgerHandler.getBalance(new Account(accountId));
     }
 
     public List<Transaction> getExtract(String accountId) {
-        return this.consensusClient.getExtract(new Account(accountId));
+        return this.ledgerHandler.getExtract(new Account(accountId));
     }
 
     public double getTotalValue(List<String> accounts) {
@@ -55,15 +55,15 @@ public class AppService {
         for (String account : accounts) {
             accountsFinal.add(new Account(account));
         }
-        return this.consensusClient.getTotalValue(accountsFinal);
+        return this.ledgerHandler.getTotalValue(accountsFinal);
     }
 
     public double getGlobalLedgerValue() {
-        return this.consensusClient.getGlobalLedgerValue();
+        return this.ledgerHandler.getGlobalLedgerValue();
     }
 
     public Ledger getLedger() {
-        return this.consensusClient.getLedger();
+        return this.ledgerHandler.getLedger();
     }
 
     public Block getBlock(BlockRequest blockRequest) {
@@ -74,7 +74,9 @@ public class AppService {
     }
 
     public boolean proposeBlock(Block block) {
+        // Check block validity
         if (!Block.checkBlock(block)) return false;
+        // TODO(currently broken due to reward transaction which is different) If local blockchain has the block, don't disseminate it
         if (this.ledgerHandler.hasBlock(block)) return false;
 
         return this.consensusClient.proposeBlock(block);
