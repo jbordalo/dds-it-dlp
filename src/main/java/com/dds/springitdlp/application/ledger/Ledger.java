@@ -17,12 +17,9 @@ import java.util.List;
 
 @Getter
 public class Ledger implements Serializable {
-    @JsonIgnore
-    private final List<Transaction> transactionPool;
     private final List<Block> blockchain;
 
     public Ledger() {
-        this.transactionPool = new LinkedList<>();
         this.blockchain = new LinkedList<>();
     }
 
@@ -53,6 +50,10 @@ public class Ledger implements Serializable {
         return balance;
     }
 
+    public boolean hasBalance(Account account, double balance) {
+        return this.getLimitedBalance(account, balance) >= balance;
+    }
+
     public double getBalance(Account account) {
         return getLimitedBalance(account, Double.MAX_VALUE);
     }
@@ -62,7 +63,7 @@ public class Ledger implements Serializable {
      * @param transaction - Transaction to check
      * @return true if transaction is in the ledger, false otherwise
      */
-    private boolean transactionInLedger(Transaction transaction) {
+    public boolean transactionInLedger(Transaction transaction) {
         Iterator<Block> blocks = ((LinkedList<Block>) this.blockchain).descendingIterator();
 
         while (blocks.hasNext()) {
@@ -73,53 +74,15 @@ public class Ledger implements Serializable {
         return false;
     }
 
-    /**
-     * Applies a transaction to the ledger
-     *
-     * @param transaction - Transaction to be applied
-     * @return TransactionResult
-     */
-    public TransactionResult sendTransaction(Transaction transaction) {
-        if (transaction.getAmount() <= 0 || !Transaction.verify(transaction) ||
-                this.getLimitedBalance(transaction.getOrigin(), transaction.getAmount()) < transaction.getAmount())
-            return TransactionResult.FAILED_TRANSACTION;
-
-        if (transactionPool.contains(transaction) || this.transactionInLedger(transaction)) return TransactionResult.REPEATED_TRANSACTION;
-
-        transactionPool.add(transaction);
-
-        return TransactionResult.OK_TRANSACTION;
-    }
-
     public List<Transaction> getExtract(Account account) {
         List<Transaction> extract = new LinkedList<>();
-        for (Block b : blockchain) {
+        for (Block b : this.blockchain) {
             for (Transaction transaction : b.getTransactions()) {
                 if (transaction.getOrigin().equals(account) || transaction.getDestination().equals(account))
                     extract.add(transaction);
             }
         }
         return extract;
-    }
-
-    @JsonIgnore
-    public Block getBlock(Account account) {
-        // if first block, mine the genesis block
-        if (this.blockchain.size() == 0) {
-            Transaction rewardTransaction = Transaction.REWARD_TRANSACTION(account);
-            return Block.genesisBlock(rewardTransaction);
-        }
-
-        if (this.transactionPool.size() < Block.MIN_TRANSACTIONS_BLOCK - 1) return null;
-
-        List<Transaction> transactions = this.transactionPool.subList(0, Block.MIN_TRANSACTIONS_BLOCK - 1);
-
-        // this is the reward transaction
-        transactions.add(Transaction.REWARD_TRANSACTION(account));
-
-        Block lastBlock = this.blockchain.get(this.blockchain.size() - 1);
-
-        return new Block(Cryptography.hash(lastBlock.toString()), BlockHeader.DEFAULT_DIFFICULTY, new ArrayList<>(transactions));
     }
 
     /**
@@ -141,17 +104,19 @@ public class Ledger implements Serializable {
 
     public void addBlock(Block block) {
         this.blockchain.add(block);
+    }
 
-        for (Transaction transaction : block.getTransactions()) {
-            this.transactionPool.remove(transaction);
-        }
+    @JsonIgnore
+    public Block getLastBlock() {
+        if (this.blockchain.isEmpty()) return null;
+        else return this.blockchain.get(this.blockchain.size() - 1);
     }
 
     @JsonIgnore
     public double getGlobalValue() {
         double total = 0;
 
-        for (Block b : blockchain) {
+        for (Block b : this.blockchain) {
             for (Transaction transaction : b.getTransactions()) {
                 // Only transfers from the system's account created value in the blockchain
                 // These transactions are the mining rewards

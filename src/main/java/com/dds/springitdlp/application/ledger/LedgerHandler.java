@@ -5,6 +5,8 @@ import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
 import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
+import com.dds.springitdlp.application.ledger.block.BlockHeader;
+import com.dds.springitdlp.cryptography.Cryptography;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
@@ -13,19 +15,23 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Component
 public class LedgerHandler {
-
     private Ledger ledger;
+    private final List<Transaction> transactionPool;
     private final String ledgerPath;
     private final Logger logger;
 
     public LedgerHandler() throws IOException {
         this.ledger = new Ledger();
+
+        this.transactionPool = new LinkedList<>();
 
         this.logger = Logger.getLogger(LedgerHandler.class.getName());
 
@@ -44,11 +50,17 @@ public class LedgerHandler {
     public TransactionResult sendTransaction(Transaction transaction) {
         this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
 
-        TransactionResult result = this.ledger.sendTransaction(transaction);
+        if (transaction.getAmount() <= 0 || !Transaction.verify(transaction) ||
+                !this.ledger.hasBalance(transaction.getOrigin(), transaction.getAmount()))
+            return TransactionResult.FAILED_TRANSACTION;
 
-        if (result == TransactionResult.OK_TRANSACTION) this.persist();
+        if (transactionPool.contains(transaction) || this.ledger.transactionInLedger(transaction)) return TransactionResult.REPEATED_TRANSACTION;
 
-        return result;
+        transactionPool.add(transaction);
+
+        this.persist();
+
+        return TransactionResult.OK_TRANSACTION;
     }
 
     private void persist() {
@@ -93,12 +105,33 @@ public class LedgerHandler {
     }
 
     public Block getBlock(Account account) {
-        return this.ledger.getBlock(account);
+
+        Block lastBlock = this.ledger.getLastBlock();
+
+        // If blockchain is empty we'll mine the genesis block
+        if (lastBlock == null) {
+            Transaction rewardTransaction = Transaction.REWARD_TRANSACTION(account);
+            return Block.genesisBlock(rewardTransaction);
+        }
+
+        if (this.transactionPool.size() < Block.MIN_TRANSACTIONS_BLOCK - 1) return null;
+
+        List<Transaction> transactions = this.transactionPool.subList(0, Block.MIN_TRANSACTIONS_BLOCK - 1);
+
+        // this is the reward transaction
+        transactions.add(Transaction.REWARD_TRANSACTION(account));
+
+        return new Block(Cryptography.hash(lastBlock.toString()), BlockHeader.DEFAULT_DIFFICULTY, new ArrayList<>(transactions));
     }
 
     public ProposeResult proposeBlock(Block block) {
         if (Block.checkBlock(block) && !this.hasBlock(block)) {
             this.ledger.addBlock(block);
+
+            for (Transaction transaction : block.getTransactions()) {
+                this.transactionPool.remove(transaction);
+            }
+
             return ProposeResult.BLOCK_ACCEPTED;
         }
         return ProposeResult.BLOCK_REJECTED;
