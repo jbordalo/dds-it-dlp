@@ -1,4 +1,4 @@
-package com.dds.springitdlp.application.ledger;
+package com.dds.springitdlp.application.entities.results;
 
 public enum TransactionResult {
     OK_TRANSACTION,

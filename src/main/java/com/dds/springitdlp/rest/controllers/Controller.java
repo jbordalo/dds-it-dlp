@@ -2,8 +2,8 @@ package com.dds.springitdlp.rest.controllers;
 
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
-import com.dds.springitdlp.application.ledger.ProposeResult;
-import com.dds.springitdlp.application.ledger.TransactionResult;
+import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.application.services.AppService;

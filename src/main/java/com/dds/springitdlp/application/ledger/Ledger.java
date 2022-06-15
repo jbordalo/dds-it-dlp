@@ -2,6 +2,7 @@ package com.dds.springitdlp.application.ledger;
 
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockHeader;
 import com.dds.springitdlp.cryptography.Cryptography;
