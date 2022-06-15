@@ -1,6 +1,7 @@
 package com.dds.springitdlp.application.ledger.block;
 
 import com.dds.springitdlp.application.entities.Account;
+import com.dds.springitdlp.cryptography.Cryptography;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,20 +34,6 @@ public class BlockRequest {
 
     public static boolean verify(BlockRequest blockRequest) {
         String publicKey = blockRequest.getAccount().getPubKey();
-        try {
-            Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
-            byte[] encoded = Base64.decodeBase64(publicKey);
-            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
-            PublicKey pkey = keyFactory.generatePublic(keySpec);
-            signature.initVerify(pkey);
-            signature.update(blockRequest.toString().getBytes(StandardCharsets.UTF_8));
-
-            byte[] signatureBytes = Base64.decodeBase64(blockRequest.getSignature());
-            return signature.verify(signatureBytes);
-        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | NoSuchProviderException |
-                 InvalidKeySpecException e) {
-            return false;
-        }
+        return Cryptography.verify(publicKey, blockRequest.toString(), blockRequest.getSignature());
     }
 }

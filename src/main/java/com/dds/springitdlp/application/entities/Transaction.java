@@ -1,5 +1,6 @@
 package com.dds.springitdlp.application.entities;
 
+import com.dds.springitdlp.cryptography.Cryptography;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,6 @@ public class Transaction implements Serializable {
     private Account destination;
     private double amount;
     private int nonce;
-
     private long timestamp;
 
     private String signature;
@@ -62,22 +62,8 @@ public class Transaction implements Serializable {
     }
 
     public static boolean verify(Transaction transaction) {
-        String publicKey = Account.parse(transaction.getOrigin().getAccountId());
-        try {
-            Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
-            byte[] encoded = Base64.decodeBase64(publicKey);
-            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
-            PublicKey pkey = keyFactory.generatePublic(keySpec);
-            signature.initVerify(pkey);
-            signature.update(transaction.toString().getBytes(StandardCharsets.UTF_8));
-
-            byte[] signatureBytes = Base64.decodeBase64(transaction.getSignature());
-            return signature.verify(signatureBytes);
-        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | NoSuchProviderException |
-                 InvalidKeySpecException e) {
-            return false;
-        }
+        String publicKey = transaction.getOrigin().getPubKey();
+        return Cryptography.verify(publicKey, transaction.toString(), transaction.getSignature());
     }
 
 }

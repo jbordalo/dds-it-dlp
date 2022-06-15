@@ -1,6 +1,7 @@
 package com.dds.springitdlp.rest.controllers.interceptors;
 
 import com.dds.springitdlp.application.entities.Account;
+import com.dds.springitdlp.cryptography.Cryptography;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -25,22 +26,7 @@ public class Interceptor implements HandlerInterceptor {
                     + " " + algorithm;
 
             String publicKey = Account.parse(request.getParameter("accountId"));
-            try {
-
-                Signature signature = Signature.getInstance(algorithm, "BC");
-                byte[] encoded = Base64.decodeBase64(publicKey);
-                KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-                X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
-                PublicKey pkey = keyFactory.generatePublic(keySpec);
-                signature.initVerify(pkey);
-                signature.update(signedContent.getBytes(StandardCharsets.UTF_8));
-
-                byte[] signatureBytes = Base64.decodeBase64(digitalSignature);
-                return signature.verify(signatureBytes);
-            } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | NoSuchProviderException |
-                     InvalidKeySpecException e) {
-                return false;
-            }
+            return Cryptography.verify(publicKey, signedContent, digitalSignature);
         }
         return true;
     }
