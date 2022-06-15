@@ -25,30 +25,46 @@ public class Ledger implements Serializable {
         this.blockchain = new LinkedList<>();
     }
 
-    // TODO refactor to checkmoney n
-    public double getBalance(Account account) {
+    /**
+     * Auxiliary method. Gets balance but stops at given limit
+     * This allows for better performance when checking if the account has enough
+     * balance for a transaction, since we can stop iterating earlier
+     *
+     * Iterating backwards is just a heuristic
+     * @param account - Account to check
+     * @param limit - limit balance needed
+     * @return balance b, b might be greater than limit, due to the last transaction value sum
+     */
+    private double getLimitedBalance(Account account, double limit) {
         double balance = 0;
 
-        for (Block b : blockchain) {
-            for (Transaction transaction : b.getTransactions()) {
+        Iterator<Block> blocks = ((LinkedList<Block>) this.blockchain).descendingIterator();
+
+        while (blocks.hasNext()) {
+            for (Transaction transaction : blocks.next().getTransactions()) {
                 if (transaction.getOrigin().equals(account)) balance -= transaction.getAmount();
                 else if (transaction.getDestination().equals(account)) balance += transaction.getAmount();
             }
+            if (balance >= limit) break;
         }
 
         return balance;
     }
 
+    public double getBalance(Account account) {
+        return getLimitedBalance(account, Double.MAX_VALUE);
+    }
+
     /**
      * Applies a transaction to the ledger
      *
-     * @param transaction Transaction to be applied
+     * @param transaction - Transaction to be applied
      * @return boolean true if transaction went through, false otherwise
      */
     public boolean sendTransaction(Transaction transaction) {
         if (!Transaction.verify(transaction) || transaction.getAmount() <= 0) return false;
 
-        if (this.getBalance(transaction.getOrigin()) < transaction.getAmount()) return false;
+        if (this.getLimitedBalance(transaction.getOrigin(), transaction.getAmount()) < transaction.getAmount()) return false;
 
         // TODO address double spending by checking on the blockchain too
         if (!transactionPool.contains(transaction))
@@ -92,7 +108,7 @@ public class Ledger implements Serializable {
      * Checks if the block is already in the chain by comparing previousHash
      * It compares previousHash because everything else is dependent on the reward transaction
      *
-     * @param block Block to check
+     * @param block - Block to check
      * @return true if the block is there, false otherwise
      */
     public boolean hasBlock(Block block) {
