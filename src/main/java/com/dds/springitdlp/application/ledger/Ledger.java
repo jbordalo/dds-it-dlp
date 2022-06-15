@@ -10,6 +10,7 @@ import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class Ledger implements Serializable {
         this.blockchain = new LinkedList<>();
     }
 
+    // TODO refactor to checkmoney n
     public double getBalance(Account account) {
         double balance = 0;
 
@@ -86,8 +88,21 @@ public class Ledger implements Serializable {
         return new Block(Cryptography.hash(lastBlock.toString()), BlockHeader.DEFAULT_DIFFICULTY, new ArrayList<>(transactions));
     }
 
+    /**
+     * Checks if the block is already in the chain by comparing previousHash
+     * It compares previousHash because everything else is dependent on the reward transaction
+     *
+     * @param block Block to check
+     * @return true if the block is there, false otherwise
+     */
     public boolean hasBlock(Block block) {
-        return this.blockchain.contains(block);
+        Iterator<Block> blocks = ((LinkedList<Block>) this.blockchain).descendingIterator();
+
+        while (blocks.hasNext()) {
+            if (blocks.next().getHeader().getPreviousHash().equals(block.getHeader().getPreviousHash())) return true;
+        }
+
+        return false;
     }
 
     public void addBlock(Block block) {
@@ -104,6 +119,8 @@ public class Ledger implements Serializable {
 
         for (Block b : blockchain) {
             for (Transaction transaction : b.getTransactions()) {
+                // Only transfers from the system's account created value in the blockchain
+                // These transactions are the mining rewards
                 if (transaction.getOrigin().equals(Account.SYSTEM_ACC())) total += transaction.getAmount();
             }
         }
