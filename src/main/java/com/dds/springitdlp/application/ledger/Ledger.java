@@ -57,6 +57,22 @@ public class Ledger implements Serializable {
     }
 
     /**
+     * Checks if transaction is already present in the ledger
+     * @param transaction - Transaction to check
+     * @return true if transaction is in the ledger, false otherwise
+     */
+    private boolean transactionInLedger(Transaction transaction) {
+        Iterator<Block> blocks = ((LinkedList<Block>) this.blockchain).descendingIterator();
+
+        while (blocks.hasNext()) {
+            for (Transaction t : blocks.next().getTransactions()) {
+                if (t.equals(transaction)) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Applies a transaction to the ledger
      *
      * @param transaction - Transaction to be applied
@@ -67,8 +83,7 @@ public class Ledger implements Serializable {
                 this.getLimitedBalance(transaction.getOrigin(), transaction.getAmount()) < transaction.getAmount())
             return TransactionResult.FAILED_TRANSACTION;
 
-        // TODO address double spending by checking on the blockchain too
-        if (transactionPool.contains(transaction)) return TransactionResult.REPEATED_TRANSACTION;
+        if (transactionPool.contains(transaction) || this.transactionInLedger(transaction)) return TransactionResult.REPEATED_TRANSACTION;
 
         transactionPool.add(transaction);
 
