@@ -5,14 +5,12 @@ import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
+import com.dds.springitdlp.application.ledger.ProposeResult;
 import com.dds.springitdlp.application.ledger.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -73,11 +71,11 @@ public class AppService {
         return this.ledgerHandler.getBlock(blockRequest.getAccount());
     }
 
-    public boolean proposeBlock(Block block) {
+    public ProposeResult proposeBlock(Block block) {
         // Check block validity
-        if (!Block.checkBlock(block)) return false;
+        if (!Block.checkBlock(block)) return ProposeResult.BLOCK_REJECTED;
         // If local blockchain has the block, don't disseminate it
-        if (this.ledgerHandler.hasBlock(block)) return false;
+        if (this.ledgerHandler.hasBlock(block)) return ProposeResult.BLOCK_REJECTED;
 
         return this.consensusClient.proposeBlock(block);
     }

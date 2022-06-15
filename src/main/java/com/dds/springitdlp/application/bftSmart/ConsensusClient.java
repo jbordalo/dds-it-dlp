@@ -5,6 +5,7 @@ import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.ProposeResult;
 import com.dds.springitdlp.application.ledger.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.http.HttpStatus;
@@ -205,7 +206,7 @@ public class ConsensusClient implements Consensus {
     }
 
     @Override
-    public boolean proposeBlock(Block block) {
+    public ProposeResult proposeBlock(Block block) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(LedgerRequestType.PROPOSE_BLOCK);
             oos.writeObject(block);
@@ -213,12 +214,14 @@ public class ConsensusClient implements Consensus {
             byte[] bytes = bos.toByteArray();
             byte[] reply = this.serviceProxy.invokeOrdered(bytes);
 
-            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-
-            this.logger.log(Level.INFO, "proposeBlock@Client: installed proposed block");
-        } catch (IOException e) {
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                this.logger.log(Level.INFO, "proposeBlock@Client");
+                return (ProposeResult) objIn.readObject();
+            }
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        return false;
+        return null;
     }
 }

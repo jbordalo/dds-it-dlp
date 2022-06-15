@@ -7,6 +7,7 @@ import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
+import com.dds.springitdlp.application.ledger.ProposeResult;
 import com.dds.springitdlp.application.ledger.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,10 +80,20 @@ public class ConsensusServer extends DefaultSingleRecoverable implements Command
                     }
                     return null;
                 }
-                // TODO
                 case PROPOSE_BLOCK -> {
-                    Block block = (Block) objIn.readObject();
-                    return this.ledgerHandler.proposeBlock(block) ? new byte[]{0x00} : new byte[]{0x01};
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        Block block = (Block) objIn.readObject();
+                        ProposeResult result = this.ledgerHandler.proposeBlock(block);
+
+                        oos.writeObject(result);
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "sendTransaction@Server: sending transaction result");
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
                 }
                 default -> {
                     return null;

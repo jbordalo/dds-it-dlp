@@ -1,7 +1,6 @@
 package com.dds.springitdlp.application.entities;
 
 import com.dds.springitdlp.cryptography.Cryptography;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

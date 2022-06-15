@@ -94,12 +94,12 @@ public class LedgerHandler {
         return this.ledger.getBlock(account);
     }
 
-    public boolean proposeBlock(Block block) {
+    public ProposeResult proposeBlock(Block block) {
         if (Block.checkBlock(block) && !this.hasBlock(block)) {
             this.ledger.addBlock(block);
-            return true;
+            return ProposeResult.BLOCK_ACCEPTED;
         }
-        return false;
+        return ProposeResult.BLOCK_REJECTED;
     }
 
     public boolean hasBlock(Block block) {

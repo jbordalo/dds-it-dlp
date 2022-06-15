@@ -2,6 +2,7 @@ package com.dds.springitdlp.rest.controllers;
 
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.ProposeResult;
 import com.dds.springitdlp.application.ledger.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
@@ -31,8 +32,10 @@ public class Controller {
         if (transaction.getOrigin().getAccountId().equals(accountId)) {
             TransactionResult result = this.service.sendTransaction(transaction);
             if (result == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            if (result == TransactionResult.FAILED_TRANSACTION) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-            if (result == TransactionResult.REPEATED_TRANSACTION) throw new ResponseStatusException(HttpStatus.CONFLICT);
+            if (result == TransactionResult.FAILED_TRANSACTION)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            if (result == TransactionResult.REPEATED_TRANSACTION)
+                throw new ResponseStatusException(HttpStatus.CONFLICT);
             return;
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -43,8 +46,10 @@ public class Controller {
         if (transaction.getOrigin().getAccountId().equals(accountId)) {
             TransactionResult result = this.service.sendAsyncTransaction(transaction);
             if (result == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            if (result == TransactionResult.FAILED_TRANSACTION) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-            if (result == TransactionResult.REPEATED_TRANSACTION) throw new ResponseStatusException(HttpStatus.CONFLICT);
+            if (result == TransactionResult.FAILED_TRANSACTION)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            if (result == TransactionResult.REPEATED_TRANSACTION)
+                throw new ResponseStatusException(HttpStatus.CONFLICT);
             return;
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -84,8 +89,10 @@ public class Controller {
     }
 
     @PostMapping("/proposeBlock")
-    public boolean proposeBlock(@RequestBody Block block) {
-        return this.service.proposeBlock(block);
+    public void proposeBlock(@RequestBody Block block) {
+        ProposeResult result = this.service.proposeBlock(block);
+
+        if (result == ProposeResult.BLOCK_REJECTED) throw new ResponseStatusException(HttpStatus.CONFLICT);
     }
 
 }
