@@ -28,8 +28,13 @@ public class Transaction implements Serializable {
 
     private String signature;
 
+    /**
+     * Special transaction for the reward miners get
+     * @param account - account that gets the reward
+     * @return reward Transaction
+     */
     public static Transaction REWARD_TRANSACTION(Account account) {
-        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.MINING_REWARD * 10, 0, 0, null);
+        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.MINING_REWARD * 10, 0, System.currentTimeMillis(), null);
     }
 
     @Override
