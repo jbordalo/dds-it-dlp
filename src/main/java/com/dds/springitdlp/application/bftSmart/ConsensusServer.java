@@ -7,6 +7,7 @@ import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
+import com.dds.springitdlp.application.ledger.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -64,8 +65,19 @@ public class ConsensusServer extends DefaultSingleRecoverable implements Command
             LedgerRequestType reqType = (LedgerRequestType) objIn.readObject();
             switch (reqType) {
                 case SEND_TRANSACTION -> {
-                    Transaction transaction = (Transaction) objIn.readObject();
-                    return this.ledgerHandler.sendTransaction(transaction) ? new byte[]{0x01} : new byte[]{0x00};
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        Transaction transaction = (Transaction) objIn.readObject();
+                        TransactionResult result = this.ledgerHandler.sendTransaction(transaction);
+
+                        oos.writeObject(result);
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "sendTransaction@Server: sending transaction result");
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
                 }
                 // TODO
                 case PROPOSE_BLOCK -> {

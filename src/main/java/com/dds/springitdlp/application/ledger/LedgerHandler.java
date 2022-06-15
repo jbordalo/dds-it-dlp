@@ -39,14 +39,14 @@ public class LedgerHandler {
      * @param transaction transaction to be handled
      * @return true if there was an error, false otherwise
      */
-    public boolean sendTransaction(Transaction transaction) {
+    public TransactionResult sendTransaction(Transaction transaction) {
         this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
 
-        boolean error = !this.ledger.sendTransaction(transaction);
+        TransactionResult result = this.ledger.sendTransaction(transaction);
 
-        if (!error) this.persist();
+        if (result == TransactionResult.OK_TRANSACTION) this.persist();
 
-        return error;
+        return result;
     }
 
     private void persist() {

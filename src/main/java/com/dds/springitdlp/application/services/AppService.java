@@ -5,11 +5,13 @@ import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
+import com.dds.springitdlp.application.ledger.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedList;
@@ -26,20 +28,18 @@ public class AppService {
         this.ledgerHandler = ledgerHandler;
     }
 
-    public void sendTransaction(Transaction transaction) {
+    public TransactionResult sendTransaction(Transaction transaction) {
         if (Transaction.verify(transaction)) {
-            this.consensusClient.sendTransaction(transaction);
-            return;
+            return this.consensusClient.sendTransaction(transaction);
         }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        return null;
     }
 
-    public void sendAsyncTransaction(Transaction transaction) {
+    public TransactionResult sendAsyncTransaction(Transaction transaction) {
         if (Transaction.verify(transaction)) {
-            this.consensusClient.sendAsyncTransaction(transaction);
-            return;
+            return this.consensusClient.sendAsyncTransaction(transaction);
         }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        return null;
     }
 
     public double getBalance(String accountId) {
@@ -76,7 +76,7 @@ public class AppService {
     public boolean proposeBlock(Block block) {
         // Check block validity
         if (!Block.checkBlock(block)) return false;
-        // TODO(currently broken due to reward transaction which is different) If local blockchain has the block, don't disseminate it
+        // If local blockchain has the block, don't disseminate it
         if (this.ledgerHandler.hasBlock(block)) return false;
 
         return this.consensusClient.proposeBlock(block);

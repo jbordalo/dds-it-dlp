@@ -5,6 +5,7 @@ import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -32,23 +33,26 @@ public class ConsensusClient implements Consensus {
     }
 
     @Override
-    public void sendTransaction(Transaction transaction) throws ResponseStatusException {
+    public TransactionResult sendTransaction(Transaction transaction) throws ResponseStatusException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
             oos.writeObject(transaction);
             byte[] bytes = bos.toByteArray();
             byte[] reply = serviceProxy.invokeOrdered(bytes);
 
-            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-
-            this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
-        } catch (IOException e) {
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+                return (TransactionResult) objIn.readObject();
+            }
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     @Override
-    public void sendAsyncTransaction(Transaction transaction) throws ResponseStatusException {
+    public TransactionResult sendAsyncTransaction(Transaction transaction) throws ResponseStatusException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
             oos.writeObject(transaction);
@@ -58,10 +62,12 @@ public class ConsensusClient implements Consensus {
 
             byte[] reply = future.get(TIMEOUT, TimeUnit.SECONDS);
 
-            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-
-            this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
-        } catch (IOException | ExecutionException | InterruptedException e) {
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+                return (TransactionResult) objIn.readObject();
+            }
+        } catch (IOException | ExecutionException | InterruptedException | ClassNotFoundException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         } catch (TimeoutException e) {

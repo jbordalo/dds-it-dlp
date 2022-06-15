@@ -2,6 +2,7 @@ package com.dds.springitdlp.rest.controllers;
 
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.TransactionResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.application.services.AppService;
@@ -28,7 +29,10 @@ public class Controller {
     @PostMapping("/sendTransaction")
     public void sendTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
         if (transaction.getOrigin().getAccountId().equals(accountId)) {
-            this.service.sendTransaction(transaction);
+            TransactionResult result = this.service.sendTransaction(transaction);
+            if (result == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            if (result == TransactionResult.FAILED_TRANSACTION) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            if (result == TransactionResult.REPEATED_TRANSACTION) throw new ResponseStatusException(HttpStatus.CONFLICT);
             return;
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -37,7 +41,10 @@ public class Controller {
     @PostMapping("/sendAsyncTransaction")
     public void sendAsyncTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
         if (transaction.getOrigin().getAccountId().equals(accountId)) {
-            this.service.sendAsyncTransaction(transaction);
+            TransactionResult result = this.service.sendAsyncTransaction(transaction);
+            if (result == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            if (result == TransactionResult.FAILED_TRANSACTION) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            if (result == TransactionResult.REPEATED_TRANSACTION) throw new ResponseStatusException(HttpStatus.CONFLICT);
             return;
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);

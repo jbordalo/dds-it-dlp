@@ -184,10 +184,10 @@ public class Client {
         System.out.println("Doing a communist");
         for (int i = 1; i < MAX; i++) {
             // Doing 4 * 12.5 instead of 50 so we can add extra transactions and are able to mine a block
-            sendTransaction(new Transaction(accs[0], accs[i], 12.5, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
-            sendTransaction(new Transaction(accs[0], accs[i], 12.5, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
-            sendTransaction(new Transaction(accs[0], accs[i], 12.5, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
-            sendTransaction(new Transaction(accs[0], accs[i], 12.5, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
+            sendTransaction(new Transaction(accs[0], accs[i], 12.5), keys[0]);
+            sendTransaction(new Transaction(accs[0], accs[i], 12.5), keys[0]);
+            sendTransaction(new Transaction(accs[0], accs[i], 12.5), keys[0]);
+            sendTransaction(new Transaction(accs[0], accs[i], 12.5), keys[0]);
         }
 
         System.out.println("Mining new block");
@@ -203,10 +203,13 @@ public class Client {
         System.out.println("One for all");
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
-            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
-            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
-            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
-            sendTransaction(new Transaction(accs[i], accs[aux], 10.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[i]);
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0), keys[i]);
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0), keys[i]);
+            sendTransaction(new Transaction(accs[i], accs[aux], 10.0), keys[i]);
+            Transaction transaction = new Transaction(accs[i], accs[aux], 10.0);
+            sendTransaction(transaction, keys[i]);
+            System.out.println("Failed transaction below:");
+            sendTransaction(transaction, keys[i]);
         }
 
         System.out.println(getExtract(accs[0].getAccountId(), keys[0]));
@@ -218,7 +221,7 @@ public class Client {
 
         System.out.println("One for all async");
         for (int i = 1; i < MAX; i++) {
-            sendAsyncTransaction(new Transaction(accs[0], accs[i], 5.0, new SecureRandom().nextInt(), System.currentTimeMillis(), null), keys[0]);
+            sendAsyncTransaction(new Transaction(accs[0], accs[i], 5.0), keys[0]);
         }
 
         System.out.println("Mining another block");

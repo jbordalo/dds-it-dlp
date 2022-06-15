@@ -29,10 +29,11 @@ public class Ledger implements Serializable {
      * Auxiliary method. Gets balance but stops at given limit
      * This allows for better performance when checking if the account has enough
      * balance for a transaction, since we can stop iterating earlier
-     *
+     * <p>
      * Iterating backwards is just a heuristic
+     *
      * @param account - Account to check
-     * @param limit - limit balance needed
+     * @param limit   - limit balance needed
      * @return balance b, b might be greater than limit, due to the last transaction value sum
      */
     private double getLimitedBalance(Account account, double limit) {
@@ -59,18 +60,19 @@ public class Ledger implements Serializable {
      * Applies a transaction to the ledger
      *
      * @param transaction - Transaction to be applied
-     * @return boolean true if transaction went through, false otherwise
+     * @return TransactionResult
      */
-    public boolean sendTransaction(Transaction transaction) {
-        if (!Transaction.verify(transaction) || transaction.getAmount() <= 0) return false;
-
-        if (this.getLimitedBalance(transaction.getOrigin(), transaction.getAmount()) < transaction.getAmount()) return false;
+    public TransactionResult sendTransaction(Transaction transaction) {
+        if (transaction.getAmount() <= 0 || !Transaction.verify(transaction) ||
+                this.getLimitedBalance(transaction.getOrigin(), transaction.getAmount()) < transaction.getAmount())
+            return TransactionResult.FAILED_TRANSACTION;
 
         // TODO address double spending by checking on the blockchain too
-        if (!transactionPool.contains(transaction))
-            transactionPool.add(transaction);
+        if (transactionPool.contains(transaction)) return TransactionResult.REPEATED_TRANSACTION;
 
-        return true;
+        transactionPool.add(transaction);
+
+        return TransactionResult.OK_TRANSACTION;
     }
 
     public List<Transaction> getExtract(Account account) {
