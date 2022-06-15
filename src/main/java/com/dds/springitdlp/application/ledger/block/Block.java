@@ -16,17 +16,13 @@ public class Block implements Serializable {
     private BlockHeader header;
     private ArrayList<Transaction> transactions;
 
-    public Block(String previousHash, long difficulty, long timestamp, ArrayList<Transaction> transactions) {
-        this.header = new BlockHeader(previousHash, MerkleTree.generateTree(transactions).getHash(), timestamp, difficulty);
+    public Block(String previousHash, long difficulty, ArrayList<Transaction> transactions) {
+        this.header = new BlockHeader(previousHash, MerkleTree.generateTree(transactions).getHash(), System.currentTimeMillis(), difficulty);
         this.transactions = transactions;
     }
 
-    public Block(String previousHash, long difficulty, ArrayList<Transaction> transactions) {
-        this(previousHash, difficulty, System.currentTimeMillis(), transactions);
-    }
-
     public static Block genesisBlock(Transaction rewardTransaction) {
-        return new Block("", BlockHeader.DEFAULT_DIFFICULTY, System.currentTimeMillis(), new ArrayList<>(Collections.singletonList(rewardTransaction)));
+        return new Block("", BlockHeader.DEFAULT_DIFFICULTY, new ArrayList<>(Collections.singletonList(rewardTransaction)));
     }
 
     /**
