@@ -34,7 +34,7 @@ public class Cryptography {
             Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
             signature.initSign(key, new SecureRandom());
             signature.update(data.getBytes(StandardCharsets.UTF_8));
-            return Base64.encodeBase64String(signature.sign());
+            return Base64.encodeBase64URLSafeString(signature.sign());
         } catch (NoSuchAlgorithmException | NoSuchProviderException | SignatureException | InvalidKeyException e) {
             return null;
         }
@@ -47,7 +47,7 @@ public class Cryptography {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-        return java.util.Base64.getEncoder().encodeToString(hash.digest(input.getBytes()));
+        return Base64.encodeBase64URLSafeString(hash.digest(input.getBytes()));
     }
 
     public static KeyStore initializeKeystore(String path, String password) throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
