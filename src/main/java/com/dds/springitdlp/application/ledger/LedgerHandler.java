@@ -8,18 +8,16 @@ import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockHeader;
 import com.dds.springitdlp.cryptography.Cryptography;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,19 +25,15 @@ import java.util.logging.Logger;
 public class LedgerHandler {
     private Ledger ledger;
     private final List<Transaction> transactionPool;
-    private final String ledgerPath;
+    private final LedgerHandlerConfig config;
     private final Logger logger;
 
-    public LedgerHandler() throws IOException {
+    @Autowired
+    public LedgerHandler(LedgerHandlerConfig config) {
         this.ledger = new Ledger();
-
+        this.config = config;
         this.transactionPool = new LinkedList<>();
-
         this.logger = Logger.getLogger(LedgerHandler.class.getName());
-
-        Files.createDirectories(Path.of(System.getenv("STORAGE_PATH")));
-
-        this.ledgerPath = "ledger" + System.getenv("REPLICA_ID");
     }
 
     /**
@@ -47,7 +41,7 @@ public class LedgerHandler {
      * persists data if there are no errors.
      *
      * @param transaction - Transaction to be handled
-     * @param signed - Indicates if result should be signed
+     * @param signed      - Indicates if result should be signed
      * @return true if there was an error, false otherwise
      */
     public TransactionResult sendTransaction(Transaction transaction, boolean signed) {
@@ -70,13 +64,15 @@ public class LedgerHandler {
 
         result.setResult(TransactionResultStatus.OK_TRANSACTION);
 
-        // TODO, fake signature for concept
-        if (signed) result.setSignature(UUID.randomUUID().toString());
+        if (signed) {
+            result.setSignature(Cryptography.sign(result.getResult().toString(), this.config.getPrivateKey()));
+            result.setReplicaId(System.getenv("REPLICA_ID"));
+        }
         return result;
     }
 
     private void persist() {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos); FileOutputStream outputStream = new FileOutputStream(System.getenv("STORAGE_PATH") + this.ledgerPath)) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos); FileOutputStream outputStream = new FileOutputStream(System.getenv("STORAGE_PATH") + this.config.getLedgerPath())) {
             oos.writeObject(this.ledger);
             this.logger.log(Level.INFO, "persist@Server: persisting ledger");
             outputStream.write(bos.toByteArray());

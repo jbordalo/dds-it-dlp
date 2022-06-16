@@ -2,8 +2,11 @@ package com.dds.springitdlp.cryptography;
 
 import org.apache.commons.codec.binary.Base64;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
@@ -26,6 +29,17 @@ public class Cryptography {
         }
     }
 
+    public static String sign(String data, PrivateKey key) {
+        try {
+            Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
+            signature.initSign(key, new SecureRandom());
+            signature.update(data.getBytes(StandardCharsets.UTF_8));
+            return Base64.encodeBase64String(signature.sign());
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | SignatureException | InvalidKeyException e) {
+            return null;
+        }
+    }
+
     public static String hash(String input) {
         MessageDigest hash;
         try {
@@ -34,5 +48,15 @@ public class Cryptography {
             throw new RuntimeException(e);
         }
         return java.util.Base64.getEncoder().encodeToString(hash.digest(input.getBytes()));
+    }
+
+    public static KeyStore initializeKeystore(String path, String password) throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
+        KeyStore keyStore = KeyStore.getInstance("pkcs12");
+        FileInputStream stream = new FileInputStream(path);
+
+        keyStore.load(stream, password.toCharArray());
+
+        stream.close();
+        return keyStore;
     }
 }

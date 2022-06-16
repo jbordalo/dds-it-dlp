@@ -6,7 +6,6 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
-import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
 import com.dds.springitdlp.application.ledger.block.Block;

@@ -4,11 +4,11 @@ import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
+import com.dds.springitdlp.cryptography.Cryptography;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,21 +28,12 @@ public class Client {
     private static PrivateKey[] keys;
     private static Account[] accs;
 
-    public static byte[] sign(byte[] data, PrivateKey key) throws NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
-        Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
-
-        signature.initSign(key, new SecureRandom());
-        signature.update(data);
-
-        return signature.sign();
-    }
-
     public static String getBalance(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/balance?accountId=" + accountId;
 
         String signable = "GET " + reqUrl + " " + ALGORITHM;
 
-        String signature = getSignature(signable, key);
+        String signature = Cryptography.sign(signable, key);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("signature", signature, "algorithm", ALGORITHM)
@@ -102,7 +93,7 @@ public class Client {
 
         String signable = "GET " + reqUrl + " " + ALGORITHM;
 
-        String signature = getSignature(signable, key);
+        String signature = Cryptography.sign(signable, key);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("signature", signature, "algorithm", ALGORITHM)
@@ -120,7 +111,7 @@ public class Client {
 
         String signable = transaction.toString();
 
-        String signature = getSignature(signable, key);
+        String signature = Cryptography.sign(signable, key);
 
         transaction.setSignature(signature);
 
@@ -142,7 +133,7 @@ public class Client {
 
         String signable = transaction.toString();
 
-        String signature = getSignature(signable, key);
+        String signature = Cryptography.sign(signable, key);
 
         transaction.setSignature(signature);
 
@@ -160,14 +151,10 @@ public class Client {
         System.out.println(response.body());
     }
 
-    private static String getSignature(String signable, PrivateKey key) throws NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
-        return Base64.encodeBase64String(sign(signable.getBytes(StandardCharsets.UTF_8), key));
-    }
-
     public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException {
         Security.addProvider(new BouncyCastleProvider());
 
-        KeyStore keyStore = initializeKeystore();
+        KeyStore keyStore = Cryptography.initializeKeystore("config/keystores/keyStore", "ddsdds");
 
         initializeAccounts(keyStore);
 
@@ -264,7 +251,7 @@ public class Client {
 
         String signable = blockRequest.toString();
 
-        String signature = getSignature(signable, key);
+        String signature = Cryptography.sign(signable, key);
 
         blockRequest.setSignature(signature);
 
@@ -309,15 +296,5 @@ public class Client {
             String emailtime = i + "bacinta01@greatestemail.com" + System.currentTimeMillis() + new SecureRandom().nextInt();
             accs[i] = new Account(Base64.encodeBase64URLSafeString(hash.digest(emailtime.getBytes(StandardCharsets.UTF_8))) + pubKey64);
         }
-    }
-
-    private static KeyStore initializeKeystore() throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
-        KeyStore keyStore = KeyStore.getInstance("pkcs12");
-        FileInputStream stream = new FileInputStream("config/keystores/keyStore");
-
-        keyStore.load(stream, "ddsdds".toCharArray());
-
-        stream.close();
-        return keyStore;
     }
 }

@@ -1,17 +1,16 @@
 package com.dds.springitdlp.application.bftSmart;
 
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Objects;
 
 @Data
 @NoArgsConstructor
 public class TransactionResult implements Serializable {
+    private String replicaId;
     private TransactionResultStatus result;
     private String signature;
 
