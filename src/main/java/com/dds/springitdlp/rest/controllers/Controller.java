@@ -1,6 +1,6 @@
 package com.dds.springitdlp.rest.controllers;
 
-import com.dds.springitdlp.application.bftSmart.TransactionResult;
+import com.dds.springitdlp.application.AsyncTransactionResult;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
@@ -43,7 +43,7 @@ public class Controller {
     }
 
     @PostMapping("/sendAsyncTransaction")
-    public List<TransactionResult> sendAsyncTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
+    public AsyncTransactionResult sendAsyncTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
         if (transaction.getOrigin().getAccountId().equals(accountId)) {
             return this.service.sendAsyncTransaction(transaction);
 //            TransactionResultStatus result = this.service.sendAsyncTransaction(transaction);

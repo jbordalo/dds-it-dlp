@@ -1,5 +1,6 @@
 package com.dds.springitdlp.application.services;
 
+import com.dds.springitdlp.application.AsyncTransactionResult;
 import com.dds.springitdlp.application.bftSmart.ConsensusClient;
 import com.dds.springitdlp.application.bftSmart.TransactionResult;
 import com.dds.springitdlp.application.entities.Account;
@@ -8,8 +9,10 @@ import com.dds.springitdlp.application.entities.results.ProposeResult;
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
+import com.dds.springitdlp.application.ledger.LedgerHandlerConfig;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
+import com.dds.springitdlp.cryptography.Cryptography;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +23,13 @@ import java.util.List;
 public class AppService {
     private final ConsensusClient consensusClient;
     private final LedgerHandler ledgerHandler;
+    private final LedgerHandlerConfig config;
 
     @Autowired
-    public AppService(ConsensusClient consensusClient, LedgerHandler ledgerHandler) {
+    public AppService(ConsensusClient consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig) {
         this.consensusClient = consensusClient;
         this.ledgerHandler = ledgerHandler;
+        this.config = ledgerHandlerConfig;
     }
 
     public TransactionResultStatus sendTransaction(Transaction transaction) {
@@ -34,9 +39,11 @@ public class AppService {
         return null;
     }
 
-    public List<TransactionResult> sendAsyncTransaction(Transaction transaction) {
+    public AsyncTransactionResult sendAsyncTransaction(Transaction transaction) {
         if (Transaction.verify(transaction)) {
-            return this.consensusClient.sendAsyncTransaction(transaction);
+            List<TransactionResult> results = this.consensusClient.sendAsyncTransaction(transaction);
+            String signature = Cryptography.sign(results.toString(), this.config.getPrivateKey());
+            return new AsyncTransactionResult(results, signature);
         }
         return null;
     }
