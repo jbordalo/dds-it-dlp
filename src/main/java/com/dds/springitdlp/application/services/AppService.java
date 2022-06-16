@@ -1,6 +1,7 @@
 package com.dds.springitdlp.application.services;
 
 import com.dds.springitdlp.application.bftSmart.ConsensusClient;
+import com.dds.springitdlp.application.bftSmart.TransactionResult;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
@@ -33,9 +34,9 @@ public class AppService {
         return null;
     }
 
-    public TransactionResultStatus sendAsyncTransaction(Transaction transaction) {
+    public List<TransactionResult> sendAsyncTransaction(Transaction transaction) {
         if (Transaction.verify(transaction)) {
-            return this.consensusClient.sendAsyncTransaction(transaction).getResult();
+            return this.consensusClient.sendAsyncTransaction(transaction);
         }
         return null;
     }

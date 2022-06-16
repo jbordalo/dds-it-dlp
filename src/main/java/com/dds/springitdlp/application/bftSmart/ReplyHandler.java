@@ -11,6 +11,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,12 +21,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ReplyHandler implements ReplyListener {
     private final AsynchServiceProxy serviceProxy;
-    private final CompletableFuture<TransactionResult> future;
-    private final Map<TransactionResult, Integer> replies = new ConcurrentHashMap<>();
+    private final CompletableFuture<List<TransactionResult>> future;
+    private final Map<TransactionResultStatus, LinkedList<TransactionResult>> replyCounter = new ConcurrentHashMap<>();
 
     @Override
     public void reset() {
-        this.replies.clear();
+        this.replyCounter.clear();
     }
 
     @Override
@@ -32,13 +35,16 @@ public class ReplyHandler implements ReplyListener {
 
         TransactionResult transactionResult = getTransactionResult(content);
 
-        this.replies.put(transactionResult, this.replies.getOrDefault(transactionResult, 0) + 1);
+        if (!this.replyCounter.containsKey(transactionResult.getResult()))
+            this.replyCounter.put(transactionResult.getResult(), new LinkedList<>());
+
+        this.replyCounter.get(transactionResult.getResult()).add(transactionResult);
 
         int quorum = serviceProxy.getViewManager().getCurrentViewF() * 2 + 1;
 
-        this.replies.forEach((result, replyCount) -> {
-            if (replyCount >= quorum) {
-                this.future.complete(result);
+        this.replyCounter.forEach((resultStatus, results) -> {
+            if (results.size() >= quorum) {
+                this.future.complete(replyCounter.get(resultStatus));
                 this.serviceProxy.cleanAsynchRequest(context.getOperationId());
             }
         });

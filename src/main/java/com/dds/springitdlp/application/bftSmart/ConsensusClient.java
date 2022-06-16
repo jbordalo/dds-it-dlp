@@ -53,15 +53,15 @@ public class ConsensusClient implements ConsensusPlane {
     }
 
     @Override
-    public TransactionResult sendAsyncTransaction(Transaction transaction) throws ResponseStatusException {
+    public List<TransactionResult> sendAsyncTransaction(Transaction transaction) throws ResponseStatusException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
+            oos.writeObject(LedgerRequestType.SEND_ASYNC_TRANSACTION);
             oos.writeObject(transaction);
             byte[] bytes = bos.toByteArray();
-            CompletableFuture<TransactionResult> future = new CompletableFuture<>();
+            CompletableFuture<List<TransactionResult>> future = new CompletableFuture<>();
             this.serviceProxy.invokeAsynchRequest(bytes, new ReplyHandler(serviceProxy, future), TOMMessageType.ORDERED_REQUEST);
 
-            TransactionResult reply = future.get(TIMEOUT, TimeUnit.SECONDS);
+            List<TransactionResult> reply = future.get(TIMEOUT, TimeUnit.SECONDS);
 
             this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
             return reply;

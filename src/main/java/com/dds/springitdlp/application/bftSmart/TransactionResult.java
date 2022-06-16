@@ -13,12 +13,7 @@ import java.util.Objects;
 @NoArgsConstructor
 public class TransactionResult implements Serializable {
     private TransactionResultStatus result;
-
-    private String signature = null;
-
-    public TransactionResult(TransactionResultStatus result) {
-        this.result = result;
-    }
+    private String signature;
 
     @Override
     public boolean equals(Object o) {

@@ -13,7 +13,7 @@ import java.util.List;
 public interface ConsensusPlane {
     TransactionResult sendTransaction(Transaction transaction) throws ResponseStatusException;
 
-    TransactionResult sendAsyncTransaction(Transaction transaction) throws ResponseStatusException;
+    List<TransactionResult> sendAsyncTransaction(Transaction transaction) throws ResponseStatusException;
 
     Ledger getLedger();
 

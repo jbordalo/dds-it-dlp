@@ -157,6 +157,7 @@ public class Client {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         System.out.println(response.statusCode());
+        System.out.println(response.body());
     }
 
     private static String getSignature(String signable, PrivateKey key) throws NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
