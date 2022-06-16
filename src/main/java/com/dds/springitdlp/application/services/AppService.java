@@ -4,7 +4,7 @@ import com.dds.springitdlp.application.bftSmart.ConsensusClient;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
+import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
 import com.dds.springitdlp.application.ledger.block.Block;
@@ -26,16 +26,16 @@ public class AppService {
         this.ledgerHandler = ledgerHandler;
     }
 
-    public TransactionResult sendTransaction(Transaction transaction) {
+    public TransactionResultStatus sendTransaction(Transaction transaction) {
         if (Transaction.verify(transaction)) {
-            return this.consensusClient.sendTransaction(transaction);
+            return this.consensusClient.sendTransaction(transaction).getResult();
         }
         return null;
     }
 
-    public TransactionResult sendAsyncTransaction(Transaction transaction) {
+    public TransactionResultStatus sendAsyncTransaction(Transaction transaction) {
         if (Transaction.verify(transaction)) {
-            return this.consensusClient.sendAsyncTransaction(transaction);
+            return this.consensusClient.sendAsyncTransaction(transaction).getResult();
         }
         return null;
     }

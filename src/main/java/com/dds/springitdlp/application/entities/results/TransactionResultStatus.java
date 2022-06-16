@@ -1,6 +1,8 @@
 package com.dds.springitdlp.application.entities.results;
 
-public enum TransactionResult {
+import java.io.Serializable;
+
+public enum TransactionResultStatus implements Serializable {
     OK_TRANSACTION,
     REPEATED_TRANSACTION,
     FAILED_TRANSACTION

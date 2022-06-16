@@ -2,7 +2,7 @@ package com.dds.springitdlp.rest.controllers;
 
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
+import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
@@ -30,11 +30,11 @@ public class Controller {
     @PostMapping("/sendTransaction")
     public void sendTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
         if (transaction.getOrigin().getAccountId().equals(accountId)) {
-            TransactionResult result = this.service.sendTransaction(transaction);
+            TransactionResultStatus result = this.service.sendTransaction(transaction);
             if (result == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            if (result == TransactionResult.FAILED_TRANSACTION)
+            if (result == TransactionResultStatus.FAILED_TRANSACTION)
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-            if (result == TransactionResult.REPEATED_TRANSACTION)
+            if (result == TransactionResultStatus.REPEATED_TRANSACTION)
                 throw new ResponseStatusException(HttpStatus.CONFLICT);
             return;
         }
@@ -44,11 +44,11 @@ public class Controller {
     @PostMapping("/sendAsyncTransaction")
     public void sendAsyncTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
         if (transaction.getOrigin().getAccountId().equals(accountId)) {
-            TransactionResult result = this.service.sendAsyncTransaction(transaction);
+            TransactionResultStatus result = this.service.sendAsyncTransaction(transaction);
             if (result == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            if (result == TransactionResult.FAILED_TRANSACTION)
+            if (result == TransactionResultStatus.FAILED_TRANSACTION)
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-            if (result == TransactionResult.REPEATED_TRANSACTION)
+            if (result == TransactionResultStatus.REPEATED_TRANSACTION)
                 throw new ResponseStatusException(HttpStatus.CONFLICT);
             return;
         }

@@ -231,9 +231,6 @@ public class Client {
 
         proposeBlock(b);
 
-        // Ensure block propagation has finished
-        Thread.sleep(2000);
-
         System.out.println(getLedger());
 
         System.out.println("Final balances");

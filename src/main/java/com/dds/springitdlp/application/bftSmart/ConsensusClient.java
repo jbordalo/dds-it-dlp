@@ -5,7 +5,7 @@ import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
+import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.http.HttpStatus;
@@ -58,17 +58,14 @@ public class ConsensusClient implements ConsensusPlane {
             oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
             oos.writeObject(transaction);
             byte[] bytes = bos.toByteArray();
-            CompletableFuture<byte[]> future = new CompletableFuture<>();
+            CompletableFuture<TransactionResult> future = new CompletableFuture<>();
             this.serviceProxy.invokeAsynchRequest(bytes, new ReplyHandler(serviceProxy, future), TOMMessageType.ORDERED_REQUEST);
 
-            byte[] reply = future.get(TIMEOUT, TimeUnit.SECONDS);
+            TransactionResult reply = future.get(TIMEOUT, TimeUnit.SECONDS);
 
-            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
-                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-                this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
-                return (TransactionResult) objIn.readObject();
-            }
-        } catch (IOException | ExecutionException | InterruptedException | ClassNotFoundException e) {
+            this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+            return reply;
+        } catch (IOException | ExecutionException | InterruptedException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         } catch (TimeoutException e) {

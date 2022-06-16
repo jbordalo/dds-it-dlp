@@ -6,7 +6,7 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
+import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
 import com.dds.springitdlp.application.ledger.block.Block;
@@ -65,10 +65,11 @@ public class ConsensusServer extends DefaultSingleRecoverable implements Command
 
             LedgerRequestType reqType = (LedgerRequestType) objIn.readObject();
             switch (reqType) {
-                case SEND_TRANSACTION -> {
+                case SEND_TRANSACTION, SEND_ASYNC_TRANSACTION -> {
                     try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
                         Transaction transaction = (Transaction) objIn.readObject();
-                        TransactionResult result = this.ledgerHandler.sendTransaction(transaction);
+                        boolean signed = reqType == LedgerRequestType.SEND_ASYNC_TRANSACTION;
+                        TransactionResult result = this.ledgerHandler.sendTransaction(transaction, signed);
 
                         oos.writeObject(result);
                         oos.flush();

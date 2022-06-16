@@ -1,9 +1,10 @@
 package com.dds.springitdlp.application.ledger;
 
+import com.dds.springitdlp.application.bftSmart.TransactionResult;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
+import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockHeader;
 import com.dds.springitdlp.cryptography.Cryptography;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,24 +46,33 @@ public class LedgerHandler {
      * Wrapper function for the Ledger sendTransaction,
      * persists data if there are no errors.
      *
-     * @param transaction transaction to be handled
+     * @param transaction - Transaction to be handled
+     * @param signed - Indicates if result should be signed
      * @return true if there was an error, false otherwise
      */
-    public TransactionResult sendTransaction(Transaction transaction) {
+    public TransactionResult sendTransaction(Transaction transaction, boolean signed) {
         this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
+        TransactionResult result = new TransactionResult();
 
         if (transaction.getAmount() <= 0 || !Transaction.verify(transaction) ||
-                !this.ledger.hasBalance(transaction.getOrigin(), transaction.getAmount()))
-            return TransactionResult.FAILED_TRANSACTION;
+                !this.ledger.hasBalance(transaction.getOrigin(), transaction.getAmount())) {
+            result.setResult(TransactionResultStatus.FAILED_TRANSACTION);
+            return result;
+        }
 
-        if (transactionPool.contains(transaction) || this.ledger.transactionInLedger(transaction))
-            return TransactionResult.REPEATED_TRANSACTION;
-
+        if (transactionPool.contains(transaction) || this.ledger.transactionInLedger(transaction)) {
+            result.setResult(TransactionResultStatus.REPEATED_TRANSACTION);
+            return result;
+        }
         transactionPool.add(transaction);
 
         this.persist();
 
-        return TransactionResult.OK_TRANSACTION;
+        result.setResult(TransactionResultStatus.OK_TRANSACTION);
+
+        // TODO, fake signature for concept
+        if (signed) result.setSignature(UUID.randomUUID().toString());
+        return result;
     }
 
     private void persist() {
