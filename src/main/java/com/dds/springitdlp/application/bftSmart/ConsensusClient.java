@@ -3,14 +3,15 @@ package com.dds.springitdlp.application.bftSmart;
 import bftsmart.tom.AsynchServiceProxy;
 import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.entities.Account;
-import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -20,10 +21,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Component
-public class ConsensusClient implements Consensus {
+public class ConsensusClient implements ConsensusPlane {
     AsynchServiceProxy serviceProxy;
     Logger logger;
-    private static long TIMEOUT = 10;
+    private final long TIMEOUT = 10;
 
     public ConsensusClient() {
         this.logger = Logger.getLogger(ConsensusClient.class.getName());
@@ -32,35 +33,37 @@ public class ConsensusClient implements Consensus {
     }
 
     @Override
-    public void sendTransaction(Transaction transaction) throws ResponseStatusException {
+    public TransactionResult sendTransaction(Transaction transaction) throws ResponseStatusException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
             oos.writeObject(transaction);
             byte[] bytes = bos.toByteArray();
             byte[] reply = serviceProxy.invokeOrdered(bytes);
 
-            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-
-            this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
-        } catch (IOException e) {
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+                return (TransactionResult) objIn.readObject();
+            }
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     @Override
-    public void sendAsyncTransaction(Transaction transaction) throws ResponseStatusException {
+    public List<TransactionResult> sendAsyncTransaction(Transaction transaction) throws ResponseStatusException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
+            oos.writeObject(LedgerRequestType.SEND_ASYNC_TRANSACTION);
             oos.writeObject(transaction);
             byte[] bytes = bos.toByteArray();
-            CompletableFuture<byte[]> future = new CompletableFuture<>();
+            CompletableFuture<List<TransactionResult>> future = new CompletableFuture<>();
             this.serviceProxy.invokeAsynchRequest(bytes, new ReplyHandler(serviceProxy, future), TOMMessageType.ORDERED_REQUEST);
 
-            byte[] reply = future.get(TIMEOUT, TimeUnit.SECONDS);
-
-            if (reply == null || reply[0] == 0x01) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            List<TransactionResult> reply = future.get(TIMEOUT, TimeUnit.SECONDS);
 
             this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
+            return reply;
         } catch (IOException | ExecutionException | InterruptedException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -79,7 +82,7 @@ public class ConsensusClient implements Consensus {
             objOut.flush();
             byteOut.flush();
 
-            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+            byte[] reply = this.serviceProxy.invokeUnordered(byteOut.toByteArray());
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
@@ -196,5 +199,25 @@ public class ConsensusClient implements Consensus {
             this.logger.log(Level.SEVERE, "error while calculating global value", e);
         }
         return -1.0;
+    }
+
+    @Override
+    public ProposeResult proposeBlock(Block block) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(LedgerRequestType.PROPOSE_BLOCK);
+            oos.writeObject(block);
+
+            byte[] bytes = bos.toByteArray();
+            byte[] reply = this.serviceProxy.invokeOrdered(bytes);
+
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                this.logger.log(Level.INFO, "proposeBlock@Client");
+                return (ProposeResult) objIn.readObject();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

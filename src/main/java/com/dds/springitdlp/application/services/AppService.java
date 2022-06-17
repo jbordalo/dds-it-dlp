@@ -1,14 +1,20 @@
 package com.dds.springitdlp.application.services;
 
+import com.dds.springitdlp.application.AsyncTransactionResult;
 import com.dds.springitdlp.application.bftSmart.ConsensusClient;
-import com.dds.springitdlp.application.bftSmart.LedgerHandler;
+import com.dds.springitdlp.application.bftSmart.TransactionResult;
 import com.dds.springitdlp.application.entities.Account;
-import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
+import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.LedgerHandler;
+import com.dds.springitdlp.application.ledger.LedgerHandlerConfig;
+import com.dds.springitdlp.application.ledger.block.Block;
+import com.dds.springitdlp.application.ledger.block.BlockRequest;
+import com.dds.springitdlp.cryptography.Cryptography;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -17,35 +23,37 @@ import java.util.List;
 public class AppService {
     private final ConsensusClient consensusClient;
     private final LedgerHandler ledgerHandler;
+    private final LedgerHandlerConfig config;
 
     @Autowired
-    public AppService(ConsensusClient consensusClient, LedgerHandler ledgerHandler) {
+    public AppService(ConsensusClient consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig) {
         this.consensusClient = consensusClient;
         this.ledgerHandler = ledgerHandler;
+        this.config = ledgerHandlerConfig;
     }
 
-    public void sendTransaction(Transaction transaction) {
+    public TransactionResultStatus sendTransaction(Transaction transaction) {
         if (Transaction.verify(transaction)) {
-            this.consensusClient.sendTransaction(transaction);
-            return;
+            return this.consensusClient.sendTransaction(transaction).getResult();
         }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        return null;
     }
 
-    public void sendAsyncTransaction(Transaction transaction) {
+    public AsyncTransactionResult sendAsyncTransaction(Transaction transaction) {
         if (Transaction.verify(transaction)) {
-            this.consensusClient.sendAsyncTransaction(transaction);
-            return;
+            List<TransactionResult> results = this.consensusClient.sendAsyncTransaction(transaction);
+            String signature = Cryptography.sign(results.toString(), this.config.getPrivateKey());
+            return new AsyncTransactionResult(results, signature);
         }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        return null;
     }
 
     public double getBalance(String accountId) {
-        return this.consensusClient.getBalance(new Account(accountId));
+        return this.ledgerHandler.getBalance(new Account(accountId));
     }
 
     public List<Transaction> getExtract(String accountId) {
-        return this.consensusClient.getExtract(new Account(accountId));
+        return this.ledgerHandler.getExtract(new Account(accountId));
     }
 
     public double getTotalValue(List<String> accounts) {
@@ -53,14 +61,30 @@ public class AppService {
         for (String account : accounts) {
             accountsFinal.add(new Account(account));
         }
-        return this.consensusClient.getTotalValue(accountsFinal);
+        return this.ledgerHandler.getTotalValue(accountsFinal);
     }
 
     public double getGlobalLedgerValue() {
-        return this.consensusClient.getGlobalLedgerValue();
+        return this.ledgerHandler.getGlobalLedgerValue();
     }
 
     public Ledger getLedger() {
-        return this.consensusClient.getLedger();
+        return this.ledgerHandler.getLedger();
+    }
+
+    public Block getBlock(BlockRequest blockRequest) {
+        // Verify blockRequest signature
+        if (!BlockRequest.verify(blockRequest)) return null;
+        // Send public key to ledgerHandler
+        return this.ledgerHandler.getBlock(blockRequest.getAccount());
+    }
+
+    public ProposeResult proposeBlock(Block block) {
+        // Check block validity
+        if (!Block.checkBlock(block)) return ProposeResult.BLOCK_REJECTED;
+        // If local blockchain has the block, don't disseminate it
+        if (this.ledgerHandler.hasBlock(block)) return ProposeResult.BLOCK_REJECTED;
+
+        return this.consensusClient.proposeBlock(block);
     }
 }

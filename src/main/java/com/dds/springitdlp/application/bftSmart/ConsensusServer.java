@@ -4,8 +4,11 @@ import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import com.dds.springitdlp.application.entities.Account;
-import com.dds.springitdlp.application.entities.Ledger;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.application.ledger.LedgerHandler;
+import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -61,9 +64,36 @@ public class ConsensusServer extends DefaultSingleRecoverable implements Command
 
             LedgerRequestType reqType = (LedgerRequestType) objIn.readObject();
             switch (reqType) {
-                case SEND_TRANSACTION -> {
-                    Transaction transaction = (Transaction) objIn.readObject();
-                    return this.ledgerHandler.sendTransaction(transaction) ? new byte[]{0x01} : new byte[]{0x00};
+                case SEND_TRANSACTION, SEND_ASYNC_TRANSACTION -> {
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        Transaction transaction = (Transaction) objIn.readObject();
+                        boolean signed = reqType == LedgerRequestType.SEND_ASYNC_TRANSACTION;
+                        TransactionResult result = this.ledgerHandler.sendTransaction(transaction, signed);
+
+                        oos.writeObject(result);
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "sendTransaction@Server: sending transaction result");
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+                case PROPOSE_BLOCK -> {
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        Block block = (Block) objIn.readObject();
+                        ProposeResult result = this.ledgerHandler.proposeBlock(block);
+
+                        oos.writeObject(result);
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "sendTransaction@Server: sending transaction result");
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
                 }
                 default -> {
                     return null;
@@ -85,6 +115,7 @@ public class ConsensusServer extends DefaultSingleRecoverable implements Command
                 case GET_LEDGER -> {
                     try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
                         Ledger ledger = this.ledgerHandler.getLedger();
+
                         oos.writeObject(ledger);
                         oos.flush();
 
