@@ -10,6 +10,7 @@ import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.application.services.AppService;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/")
+@ConditionalOnProperty(name = "service.enabled")
 public class Controller {
     private final AppService service;
 
@@ -46,13 +48,6 @@ public class Controller {
     public AsyncTransactionResult sendAsyncTransaction(@RequestParam String accountId, @RequestBody Transaction transaction) {
         if (transaction.getOrigin().getAccountId().equals(accountId)) {
             return this.service.sendAsyncTransaction(transaction);
-//            TransactionResultStatus result = this.service.sendAsyncTransaction(transaction);
-//            if (result == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-//            if (result == TransactionResultStatus.FAILED_TRANSACTION)
-//                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-//            if (result == TransactionResultStatus.REPEATED_TRANSACTION)
-//                throw new ResponseStatusException(HttpStatus.CONFLICT);
-//            return;
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }

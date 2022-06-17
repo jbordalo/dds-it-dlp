@@ -11,6 +11,7 @@ import com.dds.springitdlp.application.ledger.LedgerHandler;
 import com.dds.springitdlp.application.ledger.block.Block;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@ConditionalOnProperty(name = "bftsmart.enabled")
 @Component
 public class ConsensusServer extends DefaultSingleRecoverable implements CommandLineRunner {
     private final Logger logger;

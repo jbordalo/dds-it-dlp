@@ -1,0 +1,63 @@
+version: '3.9'
+services:
+  dds-it-dlp0:
+    image: jc/dds-it-dlp
+    ports:
+      - "8080:8080"
+    environment:
+      - REPLICA_ID=0
+      - PORT=8080
+      - SPRING_PROFILES_ACTIVE=service
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.2
+    volumes:
+      - dds-vol:/mnt/vol
+  dds-it-dlp1:
+    image: jc/dds-it-dlp
+    ports:
+      - "8081:8081"
+    environment:
+      - REPLICA_ID=1
+      - PORT=8081
+      - SPRING_PROFILES_ACTIVE=service
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.3
+    volumes:
+      - dds-vol:/mnt/vol
+  dds-it-dlp2:
+    image: jc/dds-it-dlp
+    ports:
+      - "8082:8082"
+    environment:
+      - REPLICA_ID=2
+      - PORT=8082
+      - SPRING_PROFILES_ACTIVE=service
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.4
+    volumes:
+      - dds-vol:/mnt/vol
+  dds-it-dlp3:
+    image: jc/dds-it-dlp
+    ports:
+      - "8083:8083"
+    environment:
+      - REPLICA_ID=3
+      - PORT=8083
+      - SPRING_PROFILES_ACTIVE=service
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.5
+    volumes:
+      - dds-vol:/mnt/vol
+networks:
+  dds-network:
+    ipam:
+      config:
+        - subnet: 172.26.0.0/16
+          gateway: 172.26.0.1
+
+volumes:
+  dds-vol:
