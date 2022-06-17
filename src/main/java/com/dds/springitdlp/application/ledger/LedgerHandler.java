@@ -60,8 +60,6 @@ public class LedgerHandler {
         }
         transactionPool.add(transaction);
 
-        this.persist();
-
         result.setResult(TransactionResultStatus.OK_TRANSACTION);
 
         if (signed) {
@@ -135,6 +133,8 @@ public class LedgerHandler {
     public ProposeResult proposeBlock(Block block) {
         if (Block.checkBlock(block) && !this.hasBlock(block)) {
             this.ledger.addBlock(block);
+
+            this.persist();
 
             for (Transaction transaction : block.getTransactions()) {
                 this.transactionPool.remove(transaction);
