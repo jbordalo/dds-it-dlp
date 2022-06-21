@@ -1,63 +1,158 @@
 version: '3.9'
 services:
-  dds-it-dlp0:
+  redis0:
+    image: redis:6.2-alpine
+    container_name: redis0
+    ports:
+      - "6379:6379"
+#    volumes:
+#      - redis:/data
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.99
+  service0:
     image: jc/dds-it-dlp
+    depends_on:
+      - redis0
     ports:
       - "8080:8080"
     environment:
+      - REDIS_PORT=6379
       - REPLICA_ID=0
       - PORT=8080
-      - SPRING_PROFILES_ACTIVE=service
+      - SPRING_PROFILES_ACTIVE=service,redis
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.20
+  bft0:
+    image: jc/dds-it-dlp
+    depends_on:
+      - redis0
+    ports:
+      - "11000:11000"
+    environment:
+      - REDIS_PORT=6379
+      - REPLICA_ID=0
+      - SPRING_PROFILES_ACTIVE=bft,redis
     networks:
       dds-network:
         ipv4_address: 172.26.0.2
-    volumes:
-      - dds-vol:/mnt/vol
-  dds-it-dlp1:
+  redis1:
+    image: redis:6.2-alpine
+    container_name: redis1
+    ports:
+      - "6380:6379"
+#    volumes:
+#      - redis:/data
+    networks:
+      dds-network:
+        ipv4_address: 172.26.1.99
+  service1:
     image: jc/dds-it-dlp
+    depends_on:
+      - redis1
     ports:
       - "8081:8081"
     environment:
+      - REDIS_PORT=6380
       - REPLICA_ID=1
       - PORT=8081
-      - SPRING_PROFILES_ACTIVE=service
+      - SPRING_PROFILES_ACTIVE=service,redis
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.30
+  bft1:
+    image: jc/dds-it-dlp
+    depends_on:
+      - redis1
+    ports:
+      - "11010:11010"
+    environment:
+      - REDIS_PORT=6380
+      - REPLICA_ID=1
+      - SPRING_PROFILES_ACTIVE=bft,redis
     networks:
       dds-network:
         ipv4_address: 172.26.0.3
-    volumes:
-      - dds-vol:/mnt/vol
-  dds-it-dlp2:
+  redis2:
+    image: redis:6.2-alpine
+    container_name: redis2
+    ports:
+      - "6381:6379"
+#    volumes:
+#      - redis:/data
+    networks:
+      dds-network:
+        ipv4_address: 172.26.2.99
+  service2:
     image: jc/dds-it-dlp
+    depends_on:
+      - redis2
     ports:
       - "8082:8082"
     environment:
+      - REDIS_PORT=6381
       - REPLICA_ID=2
       - PORT=8082
-      - SPRING_PROFILES_ACTIVE=service
+      - SPRING_PROFILES_ACTIVE=service,redis
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.40
+  bft2:
+    image: jc/dds-it-dlp
+    depends_on:
+      - redis2
+    ports:
+      - "11020:11020"
+    environment:
+      - REDIS_PORT=6381
+      - REPLICA_ID=2
+      - SPRING_PROFILES_ACTIVE=bft,redis
     networks:
       dds-network:
         ipv4_address: 172.26.0.4
-    volumes:
-      - dds-vol:/mnt/vol
-  dds-it-dlp3:
+  redis3:
+    image: redis:6.2-alpine
+    container_name: redis3
+    ports:
+      - "6382:6379"
+#    volumes:
+#      - redis:/data
+    networks:
+      dds-network:
+        ipv4_address: 172.26.3.99
+  service3:
     image: jc/dds-it-dlp
+    depends_on:
+      - redis3
     ports:
       - "8083:8083"
     environment:
+      - REDIS_PORT=6382
       - REPLICA_ID=3
       - PORT=8083
-      - SPRING_PROFILES_ACTIVE=service
+      - SPRING_PROFILES_ACTIVE=service,redis
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.50
+  bft3:
+    image: jc/dds-it-dlp
+    depends_on:
+      - redis3
+    ports:
+      - "11030:11030"
+    environment:
+      - REDIS_PORT=6382
+      - REPLICA_ID=3
+      - SPRING_PROFILES_ACTIVE=bft,redis
     networks:
       dds-network:
         ipv4_address: 172.26.0.5
-    volumes:
-      - dds-vol:/mnt/vol
 networks:
   dds-network:
     ipam:
       config:
         - subnet: 172.26.0.0/16
           gateway: 172.26.0.1
-
 volumes:
-  dds-vol:
+  redis:

@@ -1,7 +1,7 @@
 package com.dds.springitdlp.rest.controllers;
 
-import com.dds.springitdlp.application.AsyncTransactionResult;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;

@@ -1,38 +1,35 @@
 package com.dds.springitdlp.application.ledger;
 
-import com.dds.springitdlp.application.bftSmart.TransactionResult;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockHeader;
 import com.dds.springitdlp.cryptography.Cryptography;
+import com.dds.springitdlp.dataPlane.DataPlane;
+import com.dds.springitdlp.dataPlane.TransactionPool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Component
 public class LedgerHandler {
-    private Ledger ledger;
-    private final List<Transaction> transactionPool;
     private final LedgerHandlerConfig config;
     private final Logger logger;
 
+
+    private final DataPlane dataPlane;
+
     @Autowired
-    public LedgerHandler(LedgerHandlerConfig config) {
-        this.ledger = new Ledger();
+    public LedgerHandler(LedgerHandlerConfig config, DataPlane dataPlane) {
+        this.dataPlane = dataPlane;
         this.config = config;
-        this.transactionPool = new LinkedList<>();
         this.logger = Logger.getLogger(LedgerHandler.class.getName());
     }
 
@@ -49,16 +46,23 @@ public class LedgerHandler {
         TransactionResult result = new TransactionResult();
 
         if (transaction.getAmount() <= 0 || !Transaction.verify(transaction) ||
-                !this.ledger.hasBalance(transaction.getOrigin(), transaction.getAmount())) {
+                !this.getLedger().hasBalance(transaction.getOrigin(), transaction.getAmount())) {
             result.setResult(TransactionResultStatus.FAILED_TRANSACTION);
             return result;
         }
 
-        if (transactionPool.contains(transaction) || this.ledger.transactionInLedger(transaction)) {
+        // TODO exception handling
+        TransactionPool transactionPool = this.dataPlane.readTransactionPool();
+        List<Transaction> pool = transactionPool.getTransactionPool();
+
+        if (pool.contains(transaction) || this.getLedger().transactionInLedger(transaction)) {
             result.setResult(TransactionResultStatus.REPEATED_TRANSACTION);
             return result;
         }
-        transactionPool.add(transaction);
+
+        pool.add(transaction);
+
+        this.dataPlane.writeTransactionPool(transactionPool);
 
         result.setResult(TransactionResultStatus.OK_TRANSACTION);
 
@@ -69,50 +73,39 @@ public class LedgerHandler {
         return result;
     }
 
-    private void persist() {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos); FileOutputStream outputStream = new FileOutputStream(System.getenv("STORAGE_PATH") + this.config.getLedgerPath())) {
-            oos.writeObject(this.ledger);
-            this.logger.log(Level.INFO, "persist@Server: persisting ledger");
-            outputStream.write(bos.toByteArray());
-        } catch (IOException e) {
-            this.logger.log(Level.SEVERE, "persist@Server: error while persisting ledger");
-            e.printStackTrace();
-        }
-    }
-
     public Ledger getLedger() {
-        return this.ledger;
+        return this.dataPlane.readLedger();
     }
 
     public double getBalance(Account account) {
-        return this.ledger.getBalance(account);
+        return this.getLedger().getBalance(account);
     }
 
     public double getGlobalLedgerValue() {
-        return this.ledger.getGlobalValue();
+        return this.getLedger().getGlobalValue();
     }
 
     public List<Transaction> getExtract(Account account) {
-        return this.ledger.getExtract(account);
+        return this.getLedger().getExtract(account);
     }
 
     public double getTotalValue(List<Account> list) {
         double total = 0.0;
 
         for (Account a : list) {
-            total += this.ledger.getBalance(a);
+            total += this.getLedger().getBalance(a);
         }
 
         return total;
     }
 
     public void setLedger(Ledger ledger) {
-        this.ledger = ledger;
+        this.dataPlane.writeLedger(ledger);
     }
 
     public Block getBlock(Account account) {
 
-        Block lastBlock = this.ledger.getLastBlock();
+        Block lastBlock = this.getLedger().getLastBlock();
 
         // If blockchain is empty we'll mine the genesis block
         if (lastBlock == null) {
@@ -120,9 +113,12 @@ public class LedgerHandler {
             return Block.genesisBlock(rewardTransaction);
         }
 
-        if (this.transactionPool.size() < Block.MIN_TRANSACTIONS_BLOCK - 1) return null;
+        TransactionPool transactionPool = this.dataPlane.readTransactionPool();
+        List<Transaction> pool = transactionPool.getTransactionPool();
 
-        List<Transaction> transactions = this.transactionPool.subList(0, Block.MIN_TRANSACTIONS_BLOCK - 1);
+        if (pool.size() < Block.MIN_TRANSACTIONS_BLOCK - 1) return null;
+
+        List<Transaction> transactions = pool.subList(0, Block.MIN_TRANSACTIONS_BLOCK - 1);
 
         // this is the reward transaction
         transactions.add(Transaction.REWARD_TRANSACTION(account));
@@ -132,13 +128,19 @@ public class LedgerHandler {
 
     public ProposeResult proposeBlock(Block block) {
         if (Block.checkBlock(block) && !this.hasBlock(block)) {
-            this.ledger.addBlock(block);
+            Ledger ledger = this.getLedger();
+            ledger.addBlock(block);
 
-            this.persist();
+            this.dataPlane.writeLedger(ledger);
+
+            TransactionPool transactionPool = this.dataPlane.readTransactionPool();
+            List<Transaction> pool = transactionPool.getTransactionPool();
 
             for (Transaction transaction : block.getTransactions()) {
-                this.transactionPool.remove(transaction);
+                pool.remove(transaction);
             }
+
+            this.dataPlane.writeTransactionPool(transactionPool);
 
             return ProposeResult.BLOCK_ACCEPTED;
         }
@@ -146,6 +148,6 @@ public class LedgerHandler {
     }
 
     public boolean hasBlock(Block block) {
-        return this.ledger.hasBlock(block);
+        return this.getLedger().hasBlock(block);
     }
 }
