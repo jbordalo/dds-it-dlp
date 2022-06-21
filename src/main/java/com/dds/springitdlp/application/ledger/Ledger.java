@@ -5,15 +5,22 @@ import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+@RedisHash("Ledger")
 @Getter
 public class Ledger implements Serializable {
     private final List<Block> blockchain;
+
+    @JsonIgnore
+    @Id
+    private String id = System.getenv("REPLICA_ID");
 
     public Ledger() {
         this.blockchain = new LinkedList<>();
@@ -23,8 +30,6 @@ public class Ledger implements Serializable {
      * Auxiliary method. Gets balance but stops at given limit
      * This allows for better performance when checking if the account has enough
      * balance for a transaction, since we can stop iterating earlier
-     * <p>
-     * Iterating backwards is just a heuristic
      *
      * @param account - Account to check
      * @param limit   - limit balance needed
@@ -33,7 +38,7 @@ public class Ledger implements Serializable {
     private double getLimitedBalance(Account account, double limit) {
         double balance = 0;
 
-        Iterator<Block> blocks = ((LinkedList<Block>) this.blockchain).descendingIterator();
+        Iterator<Block> blocks = this.blockchain.iterator();
 
         while (blocks.hasNext()) {
             for (Transaction transaction : blocks.next().getTransactions()) {
@@ -61,7 +66,7 @@ public class Ledger implements Serializable {
      * @return true if transaction is in the ledger, false otherwise
      */
     public boolean transactionInLedger(Transaction transaction) {
-        Iterator<Block> blocks = ((LinkedList<Block>) this.blockchain).descendingIterator();
+        Iterator<Block> blocks = this.blockchain.iterator();
 
         while (blocks.hasNext()) {
             for (Transaction t : blocks.next().getTransactions()) {
@@ -90,10 +95,8 @@ public class Ledger implements Serializable {
      * @return true if the block is there, false otherwise
      */
     public boolean hasBlock(Block block) {
-        Iterator<Block> blocks = ((LinkedList<Block>) this.blockchain).descendingIterator();
-
-        while (blocks.hasNext()) {
-            if (blocks.next().getHeader().getPreviousHash().equals(block.getHeader().getPreviousHash())) return true;
+        for (Block value : this.blockchain) {
+            if (value.getHeader().getPreviousHash().equals(block.getHeader().getPreviousHash())) return true;
         }
 
         return false;

@@ -1,11 +1,11 @@
 package com.dds.springitdlp.application.services;
 
-import com.dds.springitdlp.application.AsyncTransactionResult;
-import com.dds.springitdlp.application.bftSmart.ConsensusClient;
-import com.dds.springitdlp.application.bftSmart.TransactionResult;
+import com.dds.springitdlp.application.consensus.ConsensusClient;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;

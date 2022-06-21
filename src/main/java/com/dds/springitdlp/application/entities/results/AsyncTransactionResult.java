@@ -1,6 +1,5 @@
-package com.dds.springitdlp.application;
+package com.dds.springitdlp.application.entities.results;
 
-import com.dds.springitdlp.application.bftSmart.TransactionResult;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -9,7 +9,6 @@ import java.io.Serializable;
 @Getter
 @NoArgsConstructor
 public class BlockHeader implements Serializable {
-
     public static final long DEFAULT_DIFFICULTY = 1;
     private final byte version = 0x01;
     private String previousHash;

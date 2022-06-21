@@ -1,4 +1,4 @@
-package com.dds.springitdlp.application.bftSmart;
+package com.dds.springitdlp.application.consensus;
 
 public enum LedgerRequestType {
     SEND_TRANSACTION,

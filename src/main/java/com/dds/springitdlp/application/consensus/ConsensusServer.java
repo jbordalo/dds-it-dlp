@@ -1,4 +1,4 @@
-package com.dds.springitdlp.application.bftSmart;
+package com.dds.springitdlp.application.consensus;
 
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
@@ -6,15 +6,18 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
 import com.dds.springitdlp.application.ledger.block.Block;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.security.Security;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,6 +38,7 @@ public class ConsensusServer extends DefaultSingleRecoverable implements Command
     public void run(String... args) {
         int id = Integer.parseInt(System.getenv().get("REPLICA_ID"));
         new ServiceReplica(id, this, this);
+        Security.addProvider(new BouncyCastleProvider());
     }
 
     @Override

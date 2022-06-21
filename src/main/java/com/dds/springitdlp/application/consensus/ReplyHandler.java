@@ -1,9 +1,10 @@
-package com.dds.springitdlp.application.bftSmart;
+package com.dds.springitdlp.application.consensus;
 
 import bftsmart.communication.client.ReplyListener;
 import bftsmart.tom.AsynchServiceProxy;
 import bftsmart.tom.RequestContext;
 import bftsmart.tom.core.messages.TOMMessage;
+import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import lombok.RequiredArgsConstructor;
 

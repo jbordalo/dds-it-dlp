@@ -25,6 +25,7 @@ public class Cryptography {
             return signature.verify(signatureBytes);
         } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | NoSuchProviderException |
                  InvalidKeySpecException e) {
+            e.printStackTrace();
             return false;
         }
     }

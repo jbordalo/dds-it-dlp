@@ -8,6 +8,7 @@ services:
       - REPLICA_ID=0
       - PORT=8080
       - SPRING_PROFILES_ACTIVE=service
+      - SPRING_PROFILES_ACTIVE=all
     networks:
       dds-network:
         ipv4_address: 172.26.0.2
@@ -21,6 +22,7 @@ services:
       - REPLICA_ID=1
       - PORT=8081
       - SPRING_PROFILES_ACTIVE=service
+      - SPRING_PROFILES_ACTIVE=all
     networks:
       dds-network:
         ipv4_address: 172.26.0.3
@@ -34,6 +36,7 @@ services:
       - REPLICA_ID=2
       - PORT=8082
       - SPRING_PROFILES_ACTIVE=service
+      - SPRING_PROFILES_ACTIVE=all
     networks:
       dds-network:
         ipv4_address: 172.26.0.4
@@ -47,6 +50,7 @@ services:
       - REPLICA_ID=3
       - PORT=8083
       - SPRING_PROFILES_ACTIVE=service
+      - SPRING_PROFILES_ACTIVE=all
     networks:
       dds-network:
         ipv4_address: 172.26.0.5
