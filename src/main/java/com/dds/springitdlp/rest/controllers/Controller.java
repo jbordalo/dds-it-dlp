@@ -92,4 +92,9 @@ public class Controller {
         if (result == ProposeResult.BLOCK_REJECTED) throw new ResponseStatusException(HttpStatus.CONFLICT);
     }
 
+    @PostMapping("/endorse")
+    public void endorse(@RequestBody SmartContract smartContract) {
+        System.out.println(smartContract.call());
+    }
+
 }

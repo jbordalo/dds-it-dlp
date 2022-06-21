@@ -88,6 +88,22 @@ public class Client {
         return response.body();
     }
 
+    public static void contract(SmartContract smartContract) throws IOException, URISyntaxException, InterruptedException {
+        String reqUrl = URL + "/endorse";
+
+        String contractJSON = new ObjectMapper().writeValueAsString(smartContract);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(reqUrl))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(contractJSON))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        System.out.println(response.statusCode());
+    }
+
     public static String getExtract(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
         String reqUrl = URL + "/extract?accountId=" + accountId;
 
@@ -157,6 +173,13 @@ public class Client {
         KeyStore keyStore = Cryptography.initializeKeystore("config/keystores/keyStore", "ddsdds");
 
         initializeAccounts(keyStore);
+
+        SmartContract contract = new SmartContract(new Transaction(accs[0], accs[1], 10.0));
+        contract(contract);
+        contract = new SmartContract(new Transaction(accs[0], accs[1], 9.0));
+        contract(contract);
+
+//        System.exit(0);
 
         // Try to mine the first block (blockchain could be empty)
         System.out.println("Mining genesis");
