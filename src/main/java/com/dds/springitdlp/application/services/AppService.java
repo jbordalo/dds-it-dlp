@@ -1,6 +1,6 @@
 package com.dds.springitdlp.application.services;
 
-import com.dds.springitdlp.application.consensus.ConsensusClient;
+import com.dds.springitdlp.application.consensus.ConsensusPlane;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
@@ -21,12 +21,12 @@ import java.util.List;
 
 @Service
 public class AppService {
-    private final ConsensusClient consensusClient;
+    private final ConsensusPlane consensusClient;
     private final LedgerHandler ledgerHandler;
     private final LedgerHandlerConfig config;
 
     @Autowired
-    public AppService(ConsensusClient consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig) {
+    public AppService(ConsensusPlane consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig) {
         this.consensusClient = consensusClient;
         this.ledgerHandler = ledgerHandler;
         this.config = ledgerHandlerConfig;

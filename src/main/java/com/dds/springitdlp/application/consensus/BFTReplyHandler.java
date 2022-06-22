@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RequiredArgsConstructor
-public class ReplyHandler implements ReplyListener {
+public class BFTReplyHandler implements ReplyListener {
     private final AsynchServiceProxy serviceProxy;
     private final CompletableFuture<List<TransactionResult>> future;
     private final Map<TransactionResultStatus, LinkedList<TransactionResult>> replyCounter = new ConcurrentHashMap<>();

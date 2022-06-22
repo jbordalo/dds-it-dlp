@@ -8,6 +8,7 @@ import com.dds.springitdlp.application.entities.results.ProposeResult;
 import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,14 +22,15 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@ConditionalOnProperty(name = "bftsmart.enabled")
 @Component
-public class ConsensusClient implements ConsensusPlane {
+public class BFTSMaRtClient implements ConsensusPlane {
     AsynchServiceProxy serviceProxy;
     Logger logger;
     private final long TIMEOUT = 10;
 
-    public ConsensusClient() {
-        this.logger = Logger.getLogger(ConsensusClient.class.getName());
+    public BFTSMaRtClient() {
+        this.logger = Logger.getLogger(BFTSMaRtClient.class.getName());
         int id = Integer.parseInt(System.getenv().get("REPLICA_ID"));
         this.serviceProxy = new AsynchServiceProxy(id);
     }
@@ -59,7 +61,7 @@ public class ConsensusClient implements ConsensusPlane {
             oos.writeObject(transaction);
             byte[] bytes = bos.toByteArray();
             CompletableFuture<List<TransactionResult>> future = new CompletableFuture<>();
-            this.serviceProxy.invokeAsynchRequest(bytes, new ReplyHandler(serviceProxy, future), TOMMessageType.ORDERED_REQUEST);
+            this.serviceProxy.invokeAsynchRequest(bytes, new BFTReplyHandler(serviceProxy, future), TOMMessageType.ORDERED_REQUEST);
 
             List<TransactionResult> reply = future.get(TIMEOUT, TimeUnit.SECONDS);
 

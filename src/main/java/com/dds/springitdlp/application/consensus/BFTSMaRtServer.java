@@ -24,14 +24,14 @@ import java.util.logging.Logger;
 
 @ConditionalOnProperty(name = "bftsmart.enabled")
 @Component
-public class ConsensusServer extends DefaultSingleRecoverable implements CommandLineRunner {
+public class BFTSMaRtServer extends DefaultSingleRecoverable implements CommandLineRunner {
     private final Logger logger;
     private final LedgerHandler ledgerHandler;
 
     @Autowired
-    public ConsensusServer(LedgerHandler ledgerHandler) {
+    public BFTSMaRtServer(LedgerHandler ledgerHandler) {
         this.ledgerHandler = ledgerHandler;
-        this.logger = Logger.getLogger(ConsensusServer.class.getName());
+        this.logger = Logger.getLogger(BFTSMaRtServer.class.getName());
     }
 
     @Override
