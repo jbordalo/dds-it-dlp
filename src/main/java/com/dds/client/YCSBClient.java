@@ -18,6 +18,7 @@ import java.util.Vector;
 public class YCSBClient extends DB {
 
     Client client;
+
     @Override
     public void init() {
         try {
@@ -31,7 +32,12 @@ public class YCSBClient extends DB {
 
     @Override
     public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
-        return null;
+        try {
+            Integer k = Integer.valueOf(key);
+            return mapStatus(client.getBalance(Math.abs(k % Client.MAX)).statusCode());
+        } catch (IOException | URISyntaxException | InterruptedException e) {
+            return Status.ERROR;
+        }
     }
 
     @Override
@@ -41,16 +47,44 @@ public class YCSBClient extends DB {
 
     @Override
     public Status update(String table, String key, Map<String, ByteIterator> values) {
-        return null;
+        try {
+            Integer k = Integer.valueOf(key);
+            return mapStatus(client.requestMineAndProposeBlock(Math.abs(k) % Client.MAX).statusCode());
+        } catch (IOException | URISyntaxException | InterruptedException e) {
+            return Status.ERROR;
+        }
     }
 
     @Override
     public Status insert(String table, String key, Map<String, ByteIterator> values) {
-        return null;
+        try {
+            //TODO destination is gened as well/ change sendtransaction?
+            Integer k = Integer.valueOf(key);
+            return mapStatus(client.sendTransaction(Math.abs(k % Client.MAX), Double.parseDouble(values.get("value").toString())).statusCode());
+        } catch (IOException | URISyntaxException | InterruptedException e) {
+            return Status.ERROR;
+        }
     }
 
     @Override
     public Status delete(String table, String key) {
         throw new UnsupportedOperationException();
+    }
+
+    private Status mapStatus(int statusCode) {
+        switch (statusCode) {
+            case 200:
+                return Status.OK;
+            case 404:
+                return Status.NOT_FOUND;
+            case 403:
+                return Status.FORBIDDEN;
+            case 400:
+                return Status.BAD_REQUEST;
+            case 409:
+                return Status.UNEXPECTED_STATE;
+            default:
+                return Status.ERROR;
+        }
     }
 }

@@ -18,10 +18,11 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
+
 public class Client {
     private static final String ALGORITHM = "SHA512withECDSA";
     private static final HttpClient client = HttpClient.newBuilder().build();
-    private static int MAX = 4;
+    public static int MAX = 4;
     private static String URL = "https://localhost:8080";
     private static PrivateKey[] keys;
     private static Account[] accs;
@@ -37,28 +38,6 @@ public class Client {
 
         Security.addProvider(new BouncyCastleProvider());
         initializeAccounts(Cryptography.initializeKeystore("config/keystores/keyStore", "ddsdds"));
-    }
-
-    private enum REQUEST {
-        GET_BALANCE("/balance?accountId="),
-        GET_LEDGER("/ledger"),
-        GET_GLOBAL("/globalLedgerValue"),
-        GET_TOTAL("/totalValue"),
-        GET_EXTRACT("/extract?accountId="),
-        SEND_TRANSACTION("/sendTransaction?accountId="),
-        SEND_ASYNC_TRANSACTION("/sendAsyncTransaction?accountId="),
-        GET_BLOCK("/block"),
-        PROPOSE_BLOCK("/proposeBlock");
-
-        private String url;
-
-        REQUEST(String s) {
-            this.url = s;
-        }
-
-        String getUrl(){
-            return url;
-        }
     }
 
     private static void initializeAccounts(KeyStore keyStore) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {
@@ -111,7 +90,7 @@ public class Client {
                 return client.send(request, HttpResponse.BodyHandlers.ofString());
             }
             case SEND_TRANSACTION, SEND_ASYNC_TRANSACTION -> {
-                Transaction transaction = (Transaction)obj;
+                Transaction transaction = (Transaction) obj;
                 String reqUrl = URL + REQUEST.getUrl() + transaction.getOrigin().getAccountId();
 
                 String signature = Cryptography.sign(transaction.toString(), key);
@@ -149,25 +128,6 @@ public class Client {
     }
 
 
-    public void initBlockchain() throws IOException, URISyntaxException, InterruptedException {
-        requestMineAndProposeBlock(accs[0], keys[0]);
-        HttpResponse<String> response;
-        for (int i = 1; i < MAX; i++) {
-            for(int j = 0; j < MAX; j++) {
-                processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], Transaction.MINING_REWARD*10/((MAX+1)*2)), keys[0]);
-            }
-        }
-        requestMineAndProposeBlock(accs[0], keys[0]);
-    }
-
-    private void requestMineAndProposeBlock(Account acc, PrivateKey key) throws IOException, URISyntaxException, InterruptedException {
-        HttpResponse<String> response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(acc, key), null);
-        if (response.statusCode() == 200){
-            Block b = new ObjectMapper().readValue(response.body(), Block.class);
-            b = mineBlock(b);
-            processRequest(REQUEST.PROPOSE_BLOCK, b, null);
-        }
-    }
 
     public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, KeyStoreException {
         Security.addProvider(new BouncyCastleProvider());
@@ -182,7 +142,7 @@ public class Client {
 
         HttpResponse<String> response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[0], keys[0]), null);
         System.out.println(response.statusCode());
-        if (response.statusCode() == 200){
+        if (response.statusCode() == 200) {
             Block b = new ObjectMapper().readValue(response.body(), Block.class);
             b = mineBlock(b);
             System.out.println(processRequest(REQUEST.PROPOSE_BLOCK, b, null).statusCode());
@@ -203,7 +163,7 @@ public class Client {
 
         response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[0], keys[0]), null);
         System.out.println(response.statusCode());
-        if (response.statusCode() == 200){
+        if (response.statusCode() == 200) {
             Block b = new ObjectMapper().readValue(response.body(), Block.class);
             b = mineBlock(b);
             System.out.println(processRequest(REQUEST.PROPOSE_BLOCK, b, null).statusCode());
@@ -241,7 +201,7 @@ public class Client {
         System.out.println("Mining another block");
         response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[2], keys[2]), null);
         System.out.println(response.statusCode());
-        if (response.statusCode() == 200){
+        if (response.statusCode() == 200) {
             Block b = new ObjectMapper().readValue(response.body(), Block.class);
             b = mineBlock(b);
             processRequest(REQUEST.PROPOSE_BLOCK, b, null);
@@ -252,6 +212,58 @@ public class Client {
         System.out.println("Final balances");
         for (int i = 0; i < MAX; i++) {
             System.out.println(processRequest(REQUEST.GET_BALANCE, accs[i].getAccountId(), keys[i]).body());
+        }
+    }
+
+
+     public HttpResponse<String> requestMineAndProposeBlock(int acc) throws IOException, URISyntaxException, InterruptedException {
+        HttpResponse<String> response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[acc], keys[acc]), null);
+        if (response.statusCode() == 200) {
+            Block b = new ObjectMapper().readValue(response.body(), Block.class);
+            b = mineBlock(b);
+            return processRequest(REQUEST.PROPOSE_BLOCK, b, null);
+        }
+        return response;
+    }
+
+    public HttpResponse<String> getBalance(int acc) throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.GET_BALANCE, accs[acc].getAccountId(), keys[acc]);
+    }
+
+    public void initBlockchain() throws IOException, URISyntaxException, InterruptedException {
+        requestMineAndProposeBlock(0);
+        for (int i = 1; i < MAX; i++) {
+            for (int j = 0; j < MAX; j++) {
+                processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], Transaction.MINING_REWARD * 10 / ((MAX + 1) * 2)), keys[0]);
+            }
+        }
+        requestMineAndProposeBlock(0);
+    }
+
+
+    public HttpResponse<String> sendTransaction(int acc, double amount) throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[acc], accs[(acc + 1) % MAX], amount), keys[acc]);
+    }
+
+    private enum REQUEST {
+        GET_BALANCE("/balance?accountId="),
+        GET_LEDGER("/ledger"),
+        GET_GLOBAL("/globalLedgerValue"),
+        GET_TOTAL("/totalValue"),
+        GET_EXTRACT("/extract?accountId="),
+        SEND_TRANSACTION("/sendTransaction?accountId="),
+        SEND_ASYNC_TRANSACTION("/sendAsyncTransaction?accountId="),
+        GET_BLOCK("/block"),
+        PROPOSE_BLOCK("/proposeBlock");
+
+        private final String url;
+
+        REQUEST(String s) {
+            this.url = s;
+        }
+
+        String getUrl() {
+            return url;
         }
     }
 
