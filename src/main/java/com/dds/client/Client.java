@@ -31,7 +31,7 @@ public class Client {
     private static PrivateKey[] keys;
     private static Account[] accs;
 
-    public static String getBalance(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
+    public static String getBalance(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException {
         String reqUrl = URL + "/balance?accountId=" + accountId;
 
         String signable = "GET " + reqUrl + " " + ALGORITHM;
@@ -124,7 +124,7 @@ public class Client {
         return null;
     }
 
-    public static String getExtract(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
+    public static String getExtract(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException {
         String reqUrl = URL + "/extract?accountId=" + accountId;
 
         String signable = "GET " + reqUrl + " " + ALGORITHM;
@@ -142,7 +142,7 @@ public class Client {
         return response.body();
     }
 
-    public static void sendTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
+    public static void sendTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException {
         String reqUrl = URL + "/sendTransaction?accountId=" + transaction.getOrigin().getAccountId();
 
         String signable = transaction.toString();
@@ -164,7 +164,7 @@ public class Client {
         System.out.println(response.statusCode());
     }
 
-    public static void sendAsyncTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
+    public static void sendAsyncTransaction(Transaction transaction, PrivateKey key) throws URISyntaxException, IOException, InterruptedException {
         String reqUrl = URL + "/sendAsyncTransaction?accountId=" + transaction.getOrigin().getAccountId();
 
         String signable = transaction.toString();
@@ -354,7 +354,7 @@ public class Client {
         System.out.println(response.statusCode());
     }
 
-    private static Block getBlock(Account account, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
+    private static Block getBlock(Account account, PrivateKey key) throws URISyntaxException, IOException, InterruptedException {
         String reqUrl = URL + "/block";
 
         // Make a block request
