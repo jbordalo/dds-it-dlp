@@ -48,7 +48,7 @@ public class Client {
             FileInputStream fi = new FileInputStream("accData.txt");
             ObjectInputStream oi = new ObjectInputStream(fi);
             int saved = oi.readInt();
-            for (count = 0; count < saved; count++) {
+            for (count = 0; count < saved && count < MAX; count++) {
                 accs[count] = (Account) oi.readObject();
                 keys[count] = (PrivateKey) oi.readObject();
             }
@@ -273,13 +273,14 @@ public class Client {
     public void initBlockchain() throws IOException, URISyntaxException, InterruptedException {
         requestMineAndProposeBlock(0);
         for (int i = 1; i < MAX; i++) {
-            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 20.0), keys[0]);
+            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 12.50), keys[0]);
         }
         requestMineAndProposeBlock(0);
     }
 
 
-    public HttpResponse<String> sendTransaction(int acc, int destAcc, double amount) throws IOException, URISyntaxException, InterruptedException {
+    public HttpResponse<String> sendTransaction(int acc, int destAcc, double amount, boolean async) throws IOException, URISyntaxException, InterruptedException {
+        if (async) return processRequest(REQUEST.SEND_ASYNC_TRANSACTION, new Transaction(accs[acc], accs[destAcc], amount), keys[acc]);
         return processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[acc], accs[destAcc], amount), keys[acc]);
     }
 

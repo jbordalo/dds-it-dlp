@@ -32,8 +32,11 @@ public class TestClient {
             String[] command = in.readLine().split(" ");
             switch (command[0].toUpperCase()) {
                 case "TRANSFER", "T":
-                    response = client.sendTransaction(Integer.parseInt(command[1]), Integer.parseInt(command[2]), Double.parseDouble(command[3]));
+                    boolean async = false;
+                    if(command.length > 4) async = Boolean.parseBoolean(command[4]);
+                    response = client.sendTransaction(Integer.parseInt(command[1]), Integer.parseInt(command[2]), Double.parseDouble(command[3]), async);
                     System.out.println("TRANSACTION:" + response.statusCode());
+                    if(async) System.out.println(response.body());
                     break;
                 case "MINE", "M":
                     response = client.requestMineAndProposeBlock(Integer.parseInt(command[1]));
@@ -73,6 +76,6 @@ public class TestClient {
     }
 
     private static void help() {
-        System.out.println("> HELP\nPossible commands:\nTRANSFER {src acc number} {dest acc number} {amount} (creates a transaction between the accounts)\nMINE {acc number} (account n requests for a block and mines it)\nBALANCE {acc number} (get the balance of account)\nLEDGER (gets the ledger)\nGLOBAL (returns the global balance of the blockchain) \nTOTAL {acc1} {acc2} ... {accn} (gets the aggregate balance of the list of accounts given)\nEXTRACT {acc number} (returns the account's extract)\nEXIT (Terminates execution)");
+        System.out.println("> HELP\nPossible commands:\nTRANSFER {src acc number} {dest acc number} {amount} {async}(creates a transaction between the accounts - async calls true default false)\nMINE {acc number} (account n requests for a block and mines it)\nBALANCE {acc number} (get the balance of account)\nLEDGER (gets the ledger)\nGLOBAL (returns the global balance of the blockchain) \nTOTAL {acc1} {acc2} ... {accn} (gets the aggregate balance of the list of accounts given)\nEXTRACT {acc number} (returns the account's extract)\nEXIT (Terminates execution)");
     }
 }

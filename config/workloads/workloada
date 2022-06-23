@@ -46,3 +46,4 @@ smart-initkey=1000
 
 maxaccounts=4
 replicaurl=https://localhost:8080
+toggleasync=false

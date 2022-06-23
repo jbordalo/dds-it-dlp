@@ -15,11 +15,13 @@ import java.util.*;
 public class YCSBClient extends DB {
 
     Client client;
+    boolean async = false;
 
     @Override
     public void init() {
         try {
             Properties properties = getProperties();
+            async = Boolean.parseBoolean(properties.getProperty("toggleasync"));
             client = new Client(Integer.parseInt(properties.getProperty("maxaccounts", String.valueOf(Client.MAX))), properties.getProperty("replicaurl", Client.URL));
             client.initBlockchain();
         } catch (UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException | CertificateException |
@@ -58,7 +60,7 @@ public class YCSBClient extends DB {
         try {
             Integer k = Integer.valueOf(key);
             Integer dest = Integer.valueOf(values.get("destination").toString());
-            return mapStatus(client.sendTransaction(accRange(k), accRange(dest), Double.parseDouble(values.get("value").toString())).statusCode());
+            return mapStatus(client.sendTransaction(accRange(k), accRange(dest), Double.parseDouble(values.get("value").toString()), async).statusCode());
         } catch (IOException | URISyntaxException | InterruptedException e) {
             return Status.ERROR;
         }
