@@ -1,6 +1,8 @@
 package com.dds.springitdlp.application.services;
 
 import com.dds.springitdlp.application.consensus.ConsensusPlane;
+import com.dds.springitdlp.application.contracts.Endorser;
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
@@ -16,6 +18,10 @@ import com.dds.springitdlp.cryptography.Cryptography;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,11 +31,15 @@ public class AppService {
     private final LedgerHandler ledgerHandler;
     private final LedgerHandlerConfig config;
 
+    private final Endorser endorser;
+
     @Autowired
-    public AppService(ConsensusPlane consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig) {
+    public AppService(ConsensusPlane consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig, Endorser endorser) {
         this.consensusClient = consensusClient;
         this.ledgerHandler = ledgerHandler;
         this.config = ledgerHandlerConfig;
+        this.endorser = endorser;
+
     }
 
     public TransactionResultStatus sendTransaction(Transaction transaction) {
@@ -86,5 +96,19 @@ public class AppService {
         if (this.ledgerHandler.hasBlock(block)) return ProposeResult.BLOCK_REJECTED;
 
         return this.consensusClient.proposeBlock(block);
+    }
+
+    public SmartContract endorse(byte[] smartContract) {
+        try (ByteArrayInputStream byteIn = new ByteArrayInputStream(smartContract);
+             ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
+            SmartContract contract = (SmartContract) objIn.readObject();
+
+            return this.endorser.endorse(contract);
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

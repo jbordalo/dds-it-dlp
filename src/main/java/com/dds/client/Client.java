@@ -1,5 +1,8 @@
 package com.dds.client;
 
+import com.dds.springitdlp.application.contracts.BasicSmartContract;
+import com.dds.springitdlp.application.contracts.MaliciousSmartContract;
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.ledger.block.Block;
@@ -9,7 +12,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -88,20 +93,27 @@ public class Client {
         return response.body();
     }
 
-    public static void contract(SmartContract smartContract) throws IOException, URISyntaxException, InterruptedException {
+    public static void contract(SmartContract smartContract, Transaction transaction) throws IOException, URISyntaxException, InterruptedException {
         String reqUrl = URL + "/endorse";
 
-        String contractJSON = new ObjectMapper().writeValueAsString(smartContract);
+        byte[] bytes = null;
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(smartContract);
+            bytes = bos.toByteArray();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI(reqUrl))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(contractJSON))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
                 .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         System.out.println(response.statusCode());
+        System.out.println(response.body());
     }
 
     public static String getExtract(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
@@ -173,13 +185,21 @@ public class Client {
         KeyStore keyStore = Cryptography.initializeKeystore("config/keystores/keyStore", "ddsdds");
 
         initializeAccounts(keyStore);
+        Transaction t = new Transaction(accs[0], accs[1], 10.0);
+        SmartContract contract = new BasicSmartContract();
 
-        SmartContract contract = new SmartContract(new Transaction(accs[0], accs[1], 10.0));
-        contract(contract);
-        contract = new SmartContract(new Transaction(accs[0], accs[1], 9.0));
-        contract(contract);
+        contract.setSignature("true");
 
-//        System.exit(0);
+        contract(contract, t);
+        t = new Transaction(accs[0], accs[1], 9.0);
+        contract = new BasicSmartContract();
+        contract(contract, t);
+
+        t = new Transaction(accs[0], accs[1], 10.0);
+        contract = new MaliciousSmartContract();
+        contract(contract, t);
+
+        System.exit(0);
 
         // Try to mine the first block (blockchain could be empty)
         System.out.println("Mining genesis");

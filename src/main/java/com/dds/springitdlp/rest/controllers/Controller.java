@@ -1,5 +1,6 @@
 package com.dds.springitdlp.rest.controllers;
 
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
@@ -93,8 +94,9 @@ public class Controller {
     }
 
     @PostMapping("/endorse")
-    public void endorse(@RequestBody SmartContract smartContract) {
-        System.out.println(smartContract.call());
+    public SmartContract endorse(@RequestBody byte[] smartContract) {
+        SmartContract c = this.service.endorse(smartContract);
+        if (c == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        return c;
     }
-
 }
