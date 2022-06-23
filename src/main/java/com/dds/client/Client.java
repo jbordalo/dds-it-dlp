@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -43,14 +43,36 @@ public class Client {
     private static void initializeAccounts(KeyStore keyStore) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {
         keys = new PrivateKey[MAX];
         accs = new Account[MAX];
+        int count;
+        try {
+            FileInputStream fi = new FileInputStream("accData.txt");
+            ObjectInputStream oi = new ObjectInputStream(fi);
+            int saved = oi.readInt();
+            for (count = 0; count < saved; count++) {
+                accs[count] = (Account) oi.readObject();
+                keys[count] = (PrivateKey) oi.readObject();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            count = 0;
+        }
 
         MessageDigest hash = MessageDigest.getInstance("SHA-256");
-
-        for (int i = 0; i < MAX; i++) {
-            keys[i] = (PrivateKey) keyStore.getKey("dds" + i, "ddsdds".toCharArray());
-            String pubKey64 = Base64.encodeBase64URLSafeString(keyStore.getCertificate("dds" + i).getPublicKey().getEncoded());
-            String emailtime = i + "bacinta01@greatestemail.com" + System.currentTimeMillis() + new SecureRandom().nextInt();
-            accs[i] = new Account(Base64.encodeBase64URLSafeString(hash.digest(emailtime.getBytes(StandardCharsets.UTF_8))) + pubKey64);
+        try {
+            FileOutputStream f = new FileOutputStream("accData.txt");
+            ObjectOutputStream o = new ObjectOutputStream(f);
+            o.writeInt(MAX);
+            for (int i = count; i < MAX; i++) {
+                keys[i] = (PrivateKey) keyStore.getKey("dds" + i, "ddsdds".toCharArray());
+                String pubKey64 = Base64.encodeBase64URLSafeString(keyStore.getCertificate("dds" + i).getPublicKey().getEncoded());
+                String emailtime = i + "bacinta01@greatestemail.com" + System.currentTimeMillis() + new SecureRandom().nextInt();
+                accs[i] = new Account(Base64.encodeBase64URLSafeString(hash.digest(emailtime.getBytes(StandardCharsets.UTF_8))) + pubKey64);
+                o.writeObject(accs[i]);
+                o.writeObject(keys[i]);
+            }
+            o.close();
+            f.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -126,7 +148,6 @@ public class Client {
         }
         return block;
     }
-
 
 
     public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, KeyStoreException {
@@ -215,8 +236,7 @@ public class Client {
         }
     }
 
-
-     public HttpResponse<String> requestMineAndProposeBlock(int acc) throws IOException, URISyntaxException, InterruptedException {
+    public HttpResponse<String> requestMineAndProposeBlock(int acc) throws IOException, URISyntaxException, InterruptedException {
         HttpResponse<String> response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[acc], keys[acc]), null);
         if (response.statusCode() == 200) {
             Block b = new ObjectMapper().readValue(response.body(), Block.class);
@@ -231,7 +251,7 @@ public class Client {
     }
 
     public HttpResponse<String> getLedger() throws IOException, URISyntaxException, InterruptedException {
-        return processRequest(REQUEST.GET_LEDGER,null, null);
+        return processRequest(REQUEST.GET_LEDGER, null, null);
     }
 
     public HttpResponse<String> getGlobal() throws IOException, URISyntaxException, InterruptedException {
@@ -239,8 +259,8 @@ public class Client {
     }
 
     public HttpResponse<String> getTotal(int[] accnums) throws IOException, URISyntaxException, InterruptedException {
-        String [] accounts = new String[accnums.length];
-        for(int i = 0; i < accnums.length; i++){
+        String[] accounts = new String[accnums.length];
+        for (int i = 0; i < accnums.length; i++) {
             accounts[i] = accs[accnums[i]].getAccountId();
         }
         return processRequest(REQUEST.GET_TOTAL, accounts, null);
@@ -249,10 +269,11 @@ public class Client {
     public HttpResponse<String> getExtract(int acc) throws IOException, URISyntaxException, InterruptedException {
         return processRequest(REQUEST.GET_EXTRACT, accs[acc].getAccountId(), keys[acc]);
     }
+
     public void initBlockchain() throws IOException, URISyntaxException, InterruptedException {
         requestMineAndProposeBlock(0);
         for (int i = 1; i < MAX; i++) {
-           processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 20.0), keys[0]);
+            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 20.0), keys[0]);
         }
         requestMineAndProposeBlock(0);
     }

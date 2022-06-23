@@ -25,6 +25,7 @@ public class DDSWorkload extends CoreWorkload {
         }
         return keynum;
     }
+
     @Override
     public boolean doInsert(DB db, Object threadstate) {
         String dbkey = Integer.toString(keysequence.nextValue().intValue());
@@ -63,12 +64,13 @@ public class DDSWorkload extends CoreWorkload {
 
         return null != status && status.isOk();
     }
+
     @Override
     public void doTransactionRead(DB db) {
-    // choose a random key
-    String keyname = Integer.toString(nextKeynum());
-    db.read(table, keyname, null, null);
-}
+        // choose a random key
+        String keyname = Integer.toString(nextKeynum());
+        db.read(table, keyname, null, null);
+    }
 
     @Override
     public void doTransactionUpdate(DB db) {

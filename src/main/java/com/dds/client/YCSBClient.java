@@ -70,8 +70,9 @@ public class YCSBClient extends DB {
     }
 
     private int accRange(int acc) {
-        return Math.abs(acc%Client.MAX);
+        return Math.abs(acc % Client.MAX);
     }
+
     private Status mapStatus(int statusCode) {
         switch (statusCode) {
             case 200:
