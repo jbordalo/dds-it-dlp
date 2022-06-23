@@ -100,7 +100,8 @@ public class AppService {
 
             SmartContract contract = (SmartContract) objIn.readObject();
 
-            if (contract == null || contract.getUuid() == null || contract.getSignature() == null) return RegisterResult.CONTRACT_REJECTED;
+            if (contract == null || contract.getUuid() == null || contract.getSignature() == null)
+                return RegisterResult.CONTRACT_REJECTED;
 
             // TODO endorser key
             if (Cryptography.verify(this.config.getPublicKey(), contract.getUuid(), contract.getSignature())) {

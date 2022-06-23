@@ -1,6 +1,5 @@
 package com.dds.springitdlp.dataPlane;
 
-import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.ledger.Ledger;
 
 public interface DataPlane {

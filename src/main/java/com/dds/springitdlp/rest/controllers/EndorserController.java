@@ -6,13 +6,15 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.naming.NoPermissionException;
 import java.io.*;
 import java.security.Security;
-import java.util.logging.Level;
 
 @RestController
 @RequestMapping("/")
@@ -44,12 +46,11 @@ public class EndorserController {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } catch(NoPermissionException e) {
+        } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        } catch(OutOfMemoryError e) {
+        } catch (OutOfMemoryError e) {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
-        }
-        catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }

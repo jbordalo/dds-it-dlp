@@ -1,6 +1,5 @@
 package com.dds.springitdlp.application.entities;
 
-import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.cryptography.Cryptography;
 import lombok.Data;
 import lombok.NoArgsConstructor;

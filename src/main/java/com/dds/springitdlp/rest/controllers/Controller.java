@@ -1,6 +1,5 @@
 package com.dds.springitdlp.rest.controllers;
 
-import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
 import com.dds.springitdlp.application.entities.results.ProposeResult;

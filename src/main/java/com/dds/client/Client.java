@@ -244,8 +244,6 @@ public class Client {
 
         proposeBlock(b);
 
-        System.out.println(getLedger());
-
         System.out.println(getExtract(accs[0].getAccountId(), keys[0]));
 
         System.out.println("One for all");

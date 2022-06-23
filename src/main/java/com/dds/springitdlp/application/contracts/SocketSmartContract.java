@@ -11,8 +11,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 @Data
 @NoArgsConstructor
@@ -43,7 +41,9 @@ public class SocketSmartContract implements SmartContract {
 
             if ("hello server".equals(greeting)) {
                 out.println("hello client");
-            } else { out.println("unrecognised greeting");}
+            } else {
+                out.println("unrecognised greeting");
+            }
 
             in.close();
             out.close();

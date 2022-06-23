@@ -5,9 +5,6 @@ import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 
 @Data
@@ -31,7 +28,7 @@ public class MemoryHogSmartContract implements SmartContract {
     public TransactionResultStatus call(Transaction transaction) {
         int[][] array = new int[10000][10000];
 
-        for(int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 10000; i++) {
             array[i] = new int[]{i};
             System.out.println(Arrays.toString(array[i]));
         }

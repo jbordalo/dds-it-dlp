@@ -7,7 +7,6 @@ import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 
 @RedisHash("SmartContractRegistry")

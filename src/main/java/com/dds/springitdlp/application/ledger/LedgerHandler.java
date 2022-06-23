@@ -47,7 +47,6 @@ public class LedgerHandler {
      */
     public TransactionResult sendTransaction(Transaction transaction, boolean signed) {
         this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
-        TransactionResult result = new TransactionResult();
 
         // TODO where check
         if (transaction.getSmartContractUuid() != null) {
@@ -55,45 +54,40 @@ public class LedgerHandler {
 
             if (smartContract == null) {
                 this.logger.log(Level.WARNING, "sendTransaction@Server: Didn't find provided smart contract");
-                result.setResult(TransactionResultStatus.FAILED_TRANSACTION);
-                return result;
+                return this.getResult(TransactionResultStatus.FAILED_TRANSACTION, signed);
             }
 
             this.logger.log(Level.INFO, "sendTransaction@Server: Running provided smart contract");
             TransactionResultStatus smartContractResult = smartContract.call(transaction);
             if (smartContractResult != TransactionResultStatus.OK_TRANSACTION) {
                 this.logger.log(Level.INFO, "sendTransaction@Server: Transaction not accepted by smart contract");
-                result.setResult(smartContractResult);
-                return result;
+                return this.getResult(smartContractResult, signed);
             }
             this.logger.log(Level.INFO, "sendTransaction@Server: Transaction accepted by smart contract");
         }
 
         if (transaction.getAmount() <= 0 || !Transaction.verify(transaction) ||
                 !this.getLedger().hasBalance(transaction.getOrigin(), transaction.getAmount())) {
-            result.setResult(TransactionResultStatus.FAILED_TRANSACTION);
-            return result;
+            return this.getResult(TransactionResultStatus.FAILED_TRANSACTION, signed);
         }
 
         TransactionPool transactionPool = this.dataPlane.readTransactionPool();
         List<Transaction> pool = transactionPool.getTransactionPool();
 
         if (pool.contains(transaction) || this.getLedger().transactionInLedger(transaction)) {
-            result.setResult(TransactionResultStatus.REPEATED_TRANSACTION);
-            return result;
+            return this.getResult(TransactionResultStatus.REPEATED_TRANSACTION, signed);
         }
 
         pool.add(transaction);
 
         this.dataPlane.writeTransactionPool(transactionPool);
 
-        result.setResult(TransactionResultStatus.OK_TRANSACTION);
+        return this.getResult(TransactionResultStatus.OK_TRANSACTION, signed);
+    }
 
-        if (signed) {
-            result.setSignature(Cryptography.sign(result.getResult().toString(), this.config.getPrivateKey()));
-            result.setReplicaId(System.getenv("REPLICA_ID"));
-        }
-        return result;
+    private TransactionResult getResult(TransactionResultStatus result, boolean signed) {
+        if (!signed) return new TransactionResult(result);
+        return new TransactionResult(result, System.getenv("REPLICA_ID"), Cryptography.sign(result.toString(), this.config.getPrivateKey()));
     }
 
     public Ledger getLedger() {
@@ -175,7 +169,8 @@ public class LedgerHandler {
     }
 
     public RegisterResult registerSmartContract(SmartContract contract) {
-        if (!Cryptography.verify(this.config.getPublicKey(), contract.getUuid(), contract.getSignature())) return RegisterResult.CONTRACT_REJECTED;
+        if (!Cryptography.verify(this.config.getPublicKey(), contract.getUuid(), contract.getSignature()))
+            return RegisterResult.CONTRACT_REJECTED;
 
         SmartContractRegistry contracts = this.dataPlane.readSmartContractRegistry();
         contracts.registerContract(contract);

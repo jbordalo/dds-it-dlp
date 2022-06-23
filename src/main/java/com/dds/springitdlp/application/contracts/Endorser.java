@@ -51,8 +51,7 @@ public class Endorser {
             this.logger.log(Level.WARNING, "Not endorsing smart contract, reason:");
             this.logger.log(Level.WARNING, "Too much memory");
             throw e;
-        }
-        finally {
+        } finally {
             // Restore policies for normal functioning
             jail.toggle();
         }
