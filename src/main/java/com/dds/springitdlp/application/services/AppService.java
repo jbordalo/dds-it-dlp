@@ -1,12 +1,11 @@
 package com.dds.springitdlp.application.services;
 
 import com.dds.springitdlp.application.consensus.ConsensusPlane;
+import com.dds.springitdlp.application.contracts.Endorser;
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
-import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
-import com.dds.springitdlp.application.entities.results.ProposeResult;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
-import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
+import com.dds.springitdlp.application.entities.results.*;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
 import com.dds.springitdlp.application.ledger.LedgerHandlerConfig;
@@ -14,11 +13,18 @@ import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.cryptography.Cryptography;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.util.LinkedList;
 import java.util.List;
 
+// TODO
+@ConditionalOnProperty(name = "endorser", havingValue = "false")
 @Service
 public class AppService {
     private final ConsensusPlane consensusClient;
@@ -26,7 +32,7 @@ public class AppService {
     private final LedgerHandlerConfig config;
 
     @Autowired
-    public AppService(ConsensusPlane consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig) {
+    public AppService(ConsensusPlane consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig, Endorser endorser) {
         this.consensusClient = consensusClient;
         this.ledgerHandler = ledgerHandler;
         this.config = ledgerHandlerConfig;
@@ -86,5 +92,23 @@ public class AppService {
         if (this.ledgerHandler.hasBlock(block)) return ProposeResult.BLOCK_REJECTED;
 
         return this.consensusClient.proposeBlock(block);
+    }
+
+    public RegisterResult registerSmartContract(byte[] smartContract) {
+        try (ByteArrayInputStream byteIn = new ByteArrayInputStream(smartContract);
+             ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
+            SmartContract contract = (SmartContract) objIn.readObject();
+
+            if (contract == null || contract.getUuid() == null || contract.getSignature() == null) return RegisterResult.CONTRACT_REJECTED;
+
+            // TODO endorser key
+            if (Cryptography.verify(this.config.getPublicKey(), contract.getUuid(), contract.getSignature())) {
+                return this.consensusClient.registerSmartContract(contract);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return RegisterResult.CONTRACT_REJECTED;
     }
 }

@@ -1,8 +1,10 @@
 package com.dds.springitdlp.rest.controllers;
 
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.RegisterResult;
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
@@ -12,6 +14,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -20,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/")
-@ConditionalOnProperty(name = "service.enabled")
+@ConditionalOnProperty(name = "endorser", havingValue = "false")
 public class Controller {
     private final AppService service;
 
@@ -92,4 +95,8 @@ public class Controller {
         if (result == ProposeResult.BLOCK_REJECTED) throw new ResponseStatusException(HttpStatus.CONFLICT);
     }
 
+    @PostMapping("/registerSmartContract")
+    public RegisterResult registerSmartContract(@RequestBody @NonNull byte[] smartContract) {
+        return this.service.registerSmartContract(smartContract);
+    }
 }

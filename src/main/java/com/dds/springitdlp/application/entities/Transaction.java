@@ -1,5 +1,6 @@
 package com.dds.springitdlp.application.entities;
 
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.cryptography.Cryptography;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,13 +21,19 @@ public class Transaction implements Serializable {
     private double amount;
     private long timestamp;
     private String signature;
+    private String smartContractUuid;
 
     public Transaction(Account origin, Account destination, double amount) {
+        this(origin, destination, amount, null);
+    }
+
+    public Transaction(Account origin, Account destination, double amount, String smartContractUuid) {
         this.uuid = UUID.randomUUID().toString();
         this.origin = origin;
         this.destination = destination;
         this.amount = amount;
         this.timestamp = System.currentTimeMillis();
+        this.smartContractUuid = smartContractUuid;
     }
 
     /**
@@ -47,6 +54,7 @@ public class Transaction implements Serializable {
                 ", destination=" + destination +
                 ", amount=" + amount +
                 ", timestamp=" + timestamp +
+                ", smartContractUuid='" + smartContractUuid + '\'' +
                 '}';
     }
 

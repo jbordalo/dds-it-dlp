@@ -2,9 +2,11 @@ package com.dds.springitdlp.application.consensus;
 
 import bftsmart.tom.AsynchServiceProxy;
 import bftsmart.tom.core.messages.TOMMessageType;
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.RegisterResult;
 import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
@@ -222,5 +224,25 @@ public class BFTSMaRtClient implements ConsensusPlane {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public RegisterResult registerSmartContract(SmartContract contract) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(LedgerRequestType.REGISTER_SMART_CONTRACT);
+            oos.writeObject(contract);
+
+            byte[] bytes = bos.toByteArray();
+            byte[] reply = this.serviceProxy.invokeOrdered(bytes);
+
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                this.logger.log(Level.INFO, "registerSmartContract@Client");
+                return (RegisterResult) objIn.readObject();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return RegisterResult.CONTRACT_REJECTED;
     }
 }

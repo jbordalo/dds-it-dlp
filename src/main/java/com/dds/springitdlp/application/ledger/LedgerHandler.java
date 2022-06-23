@@ -1,16 +1,20 @@
 package com.dds.springitdlp.application.ledger;
 
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.RegisterResult;
 import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockHeader;
 import com.dds.springitdlp.cryptography.Cryptography;
 import com.dds.springitdlp.dataPlane.DataPlane;
+import com.dds.springitdlp.dataPlane.SmartContractRegistry;
 import com.dds.springitdlp.dataPlane.TransactionPool;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -18,12 +22,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+// TODO
+@ConditionalOnProperty(name = "endorser", havingValue = "false")
 @Component
 public class LedgerHandler {
     private final LedgerHandlerConfig config;
     private final Logger logger;
-
-
     private final DataPlane dataPlane;
 
     @Autowired
@@ -45,13 +49,32 @@ public class LedgerHandler {
         this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
         TransactionResult result = new TransactionResult();
 
+        // TODO where check
+        if (transaction.getSmartContractUuid() != null) {
+            SmartContract smartContract = this.dataPlane.readSmartContractRegistry().getSmartContract(transaction.getSmartContractUuid());
+
+            if (smartContract == null) {
+                this.logger.log(Level.WARNING, "sendTransaction@Server: Didn't find provided smart contract");
+                result.setResult(TransactionResultStatus.FAILED_TRANSACTION);
+                return result;
+            }
+
+            this.logger.log(Level.INFO, "sendTransaction@Server: Running provided smart contract");
+            TransactionResultStatus smartContractResult = smartContract.call(transaction);
+            if (smartContractResult != TransactionResultStatus.OK_TRANSACTION) {
+                this.logger.log(Level.INFO, "sendTransaction@Server: Transaction not accepted by smart contract");
+                result.setResult(smartContractResult);
+                return result;
+            }
+            this.logger.log(Level.INFO, "sendTransaction@Server: Transaction accepted by smart contract");
+        }
+
         if (transaction.getAmount() <= 0 || !Transaction.verify(transaction) ||
                 !this.getLedger().hasBalance(transaction.getOrigin(), transaction.getAmount())) {
             result.setResult(TransactionResultStatus.FAILED_TRANSACTION);
             return result;
         }
 
-        // TODO exception handling
         TransactionPool transactionPool = this.dataPlane.readTransactionPool();
         List<Transaction> pool = transactionPool.getTransactionPool();
 
@@ -149,5 +172,15 @@ public class LedgerHandler {
 
     public boolean hasBlock(Block block) {
         return this.getLedger().hasBlock(block);
+    }
+
+    public RegisterResult registerSmartContract(SmartContract contract) {
+        if (!Cryptography.verify(this.config.getPublicKey(), contract.getUuid(), contract.getSignature())) return RegisterResult.CONTRACT_REJECTED;
+
+        SmartContractRegistry contracts = this.dataPlane.readSmartContractRegistry();
+        contracts.registerContract(contract);
+        this.dataPlane.writeSmartContractRegistry(contracts);
+
+        return RegisterResult.CONTRACT_REGISTERED;
     }
 }
