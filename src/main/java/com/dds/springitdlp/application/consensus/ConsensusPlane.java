@@ -1,8 +1,10 @@
 package com.dds.springitdlp.application.consensus;
 
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.RegisterResult;
 import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
@@ -26,4 +28,6 @@ public interface ConsensusPlane {
     double getGlobalLedgerValue();
 
     ProposeResult proposeBlock(Block block);
+
+    RegisterResult registerSmartContract(SmartContract contract);
 }

@@ -13,9 +13,12 @@ import java.security.cert.CertificateException;
 public class LedgerHandlerConfig {
     private final PrivateKey privateKey;
 
+    private final PublicKey publicKey;
+
     public LedgerHandlerConfig() throws CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
         KeyStore keyStore = Cryptography.initializeKeystore(System.getenv("SERVER_KEYSTORE"), System.getenv("SERVER_KEYSTORE_PW"));
         this.privateKey = (PrivateKey) keyStore.getKey(System.getenv("SERVER_KEYSTORE_ALIAS"), System.getenv("SERVER_KEYSTORE_PW").toCharArray());
+        this.publicKey = keyStore.getCertificate(System.getenv("SERVER_KEYSTORE_ALIAS")).getPublicKey();
     }
 
 }

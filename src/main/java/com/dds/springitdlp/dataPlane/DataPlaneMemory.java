@@ -11,6 +11,8 @@ public class DataPlaneMemory implements DataPlane {
     private Ledger ledger = new Ledger();
     private TransactionPool transactionPool = new TransactionPool();
 
+    private SmartContractRegistry smartContractRegistry = new SmartContractRegistry();
+
     @Override
     public Ledger readLedger() {
         return this.ledger;
@@ -29,5 +31,15 @@ public class DataPlaneMemory implements DataPlane {
     @Override
     public void writeTransactionPool(TransactionPool transactionPool) {
         this.transactionPool = transactionPool;
+    }
+
+    @Override
+    public SmartContractRegistry readSmartContractRegistry() {
+        return this.smartContractRegistry;
+    }
+
+    @Override
+    public void writeSmartContractRegistry(SmartContractRegistry smartContractRegistry) {
+        this.smartContractRegistry = smartContractRegistry;
     }
 }

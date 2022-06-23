@@ -30,13 +30,19 @@ public class Cryptography {
         }
     }
 
+    public static boolean verify(PublicKey publicKey, String signedContent, String signatureString) {
+        return Cryptography.verify(Base64.encodeBase64URLSafeString(publicKey.getEncoded()), signedContent, signatureString);
+    }
+
     public static String sign(String data, PrivateKey key) {
         try {
             Signature signature = Signature.getInstance("SHA512withECDSA", "BC");
             signature.initSign(key, new SecureRandom());
             signature.update(data.getBytes(StandardCharsets.UTF_8));
+
             return Base64.encodeBase64URLSafeString(signature.sign());
         } catch (NoSuchAlgorithmException | NoSuchProviderException | SignatureException | InvalidKeyException e) {
+            e.printStackTrace();
             return null;
         }
     }

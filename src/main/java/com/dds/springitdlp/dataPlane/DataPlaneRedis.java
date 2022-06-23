@@ -10,14 +10,15 @@ import java.util.Optional;
 @Component
 @ConditionalOnProperty(name = "persistence.plane", havingValue = "redis")
 public class DataPlaneRedis implements DataPlane {
-
     private final LedgerRepository ledgerRepository;
     private final TransactionRepository transactionRepository;
+    private final SmartContractRegistryRepository smartContractRegistryRepository;
 
     @Autowired
-    public DataPlaneRedis(LedgerRepository ledgerRepository, TransactionRepository transactionRepository) {
+    public DataPlaneRedis(LedgerRepository ledgerRepository, TransactionRepository transactionRepository, SmartContractRegistryRepository smartContractRegistryRepository) {
         this.ledgerRepository = ledgerRepository;
         this.transactionRepository = transactionRepository;
+        this.smartContractRegistryRepository = smartContractRegistryRepository;
         this.initialize();
     }
 
@@ -29,6 +30,10 @@ public class DataPlaneRedis implements DataPlane {
         Optional<TransactionPool> transactionPool = this.transactionRepository.findById(System.getenv("REPLICA_ID"));
 
         if (transactionPool.isEmpty()) this.transactionRepository.save(new TransactionPool());
+
+        Optional<SmartContractRegistry> smartContractRegistry = this.smartContractRegistryRepository.findById(System.getenv("REPLICA_ID"));
+
+        if (smartContractRegistry.isEmpty()) this.smartContractRegistryRepository.save(new SmartContractRegistry());
     }
 
     @Override
@@ -49,5 +54,15 @@ public class DataPlaneRedis implements DataPlane {
     @Override
     public void writeTransactionPool(TransactionPool transactionPool) {
         this.transactionRepository.save(transactionPool);
+    }
+
+    @Override
+    public SmartContractRegistry readSmartContractRegistry() {
+        return this.smartContractRegistryRepository.findById(System.getenv("REPLICA_ID")).get();
+    }
+
+    @Override
+    public void writeSmartContractRegistry(SmartContractRegistry smartContractRegistry) {
+        this.smartContractRegistryRepository.save(smartContractRegistry);
     }
 }

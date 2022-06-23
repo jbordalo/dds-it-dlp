@@ -6,6 +6,9 @@ import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import java.io.Serializable;
 
 public interface SmartContract extends Serializable {
+    String getUuid();
+
+    void setUuid(String uuid);
 
     String getSignature();
 

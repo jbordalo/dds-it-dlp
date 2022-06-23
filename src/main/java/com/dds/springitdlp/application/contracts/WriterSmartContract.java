@@ -2,16 +2,18 @@ package com.dds.springitdlp.application.contracts;
 
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+@Data
 @NoArgsConstructor
-public class BasicSmartContract implements SmartContract {
-    private final long TIME_LIMIT = 24 * 60 * 60 * 1000;
+public class WriterSmartContract implements SmartContract {
     private String uuid;
+    private String signature;
 
     @Override
     public String getUuid() {
@@ -23,15 +25,17 @@ public class BasicSmartContract implements SmartContract {
         this.uuid = uuid;
     }
 
-    @Getter
-    @Setter
-    private String signature;
-
     @Override
     public TransactionResultStatus call(Transaction transaction) {
-        long timeElapsed = System.currentTimeMillis() - transaction.getTimestamp();
+        try {
+            Files.createFile(Path.of("./myFile"));
 
-        if (transaction.getAmount() < 10.0 || timeElapsed > this.TIME_LIMIT) {
+            Files.writeString(Path.of("./myFile"), "writing to file");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (transaction.getAmount() < 10.0) {
             return TransactionResultStatus.FAILED_TRANSACTION;
         } else {
             return TransactionResultStatus.OK_TRANSACTION;

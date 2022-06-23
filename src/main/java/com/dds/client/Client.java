@@ -1,10 +1,9 @@
 package com.dds.client;
 
-import com.dds.springitdlp.application.contracts.BasicSmartContract;
-import com.dds.springitdlp.application.contracts.MaliciousSmartContract;
-import com.dds.springitdlp.application.contracts.SmartContract;
+import com.dds.springitdlp.application.contracts.*;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.entities.results.RegisterResult;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.cryptography.Cryptography;
@@ -12,9 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -28,6 +25,7 @@ public class Client {
 
     private static final int MAX = 4;
     private static final String URL = "https://localhost:8080";
+    private static final String ENDORSER_URL = "https://localhost:8090";
     private static final String ALGORITHM = "SHA512withECDSA";
     private static final HttpClient client = HttpClient.newBuilder().build();
     private static PrivateKey[] keys;
@@ -93,8 +91,8 @@ public class Client {
         return response.body();
     }
 
-    public static void contract(SmartContract smartContract, Transaction transaction) throws IOException, URISyntaxException, InterruptedException {
-        String reqUrl = URL + "/endorse";
+    public static SmartContract endorse(SmartContract smartContract) throws IOException, URISyntaxException, InterruptedException {
+        String reqUrl = ENDORSER_URL + "/endorse";
 
         byte[] bytes = null;
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
@@ -110,10 +108,20 @@ public class Client {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
                 .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
-        System.out.println(response.statusCode());
-        System.out.println(response.body());
+        if (response.statusCode() == 200) {
+            byte[] reply = response.body();
+
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
+                return (SmartContract) objIn.readObject();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return null;
     }
 
     public static String getExtract(String accountId, PrivateKey key) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
@@ -185,21 +193,8 @@ public class Client {
         KeyStore keyStore = Cryptography.initializeKeystore("config/keystores/keyStore", "ddsdds");
 
         initializeAccounts(keyStore);
-        Transaction t = new Transaction(accs[0], accs[1], 10.0);
-        SmartContract contract = new BasicSmartContract();
 
-        contract.setSignature("true");
-
-        contract(contract, t);
-        t = new Transaction(accs[0], accs[1], 9.0);
-        contract = new BasicSmartContract();
-        contract(contract, t);
-
-        t = new Transaction(accs[0], accs[1], 10.0);
-        contract = new MaliciousSmartContract();
-        contract(contract, t);
-
-        System.exit(0);
+        testSmartContracts();
 
         // Try to mine the first block (blockchain could be empty)
         System.out.println("Mining genesis");
@@ -212,6 +207,26 @@ public class Client {
 
         // Have the account that mined transfer money to more accounts
         // This creates money in some accounts for testing
+
+        SmartContract smartContract = new BasicSmartContract();
+        smartContract = endorse(smartContract);
+
+        // We need to test if was accepted, depends on status code, check testContracts()
+        RegisterResult res = register(smartContract);
+
+        String smartContractUuid;
+        // We also check for REGISTER / REJECTED
+        if (res == RegisterResult.CONTRACT_REGISTERED) {
+            smartContractUuid = smartContract.getUuid();
+            // This one should pass
+            sendTransaction(new Transaction(accs[0], accs[1], 10.0, smartContractUuid), keys[0]);
+            // This one should fail
+            sendTransaction(new Transaction(accs[0], accs[1], 8.5, smartContractUuid), keys[0]);
+        }
+
+        // This one should fail
+        sendTransaction(new Transaction(accs[0], accs[1], 8.5, "nada"), keys[0]);
+
         System.out.println("Doing a communist");
         for (int i = 1; i < MAX; i++) {
             // Doing 4 * 12.5 instead of 50 so we can add extra transactions and are able to mine a block
@@ -228,6 +243,8 @@ public class Client {
         if (b == null) System.out.println("Couldn't get a block");
 
         proposeBlock(b);
+
+        System.out.println(getLedger());
 
         System.out.println(getExtract(accs[0].getAccountId(), keys[0]));
 
@@ -253,6 +270,8 @@ public class Client {
         System.out.println("One for all async");
         for (int i = 1; i < MAX; i++) {
             sendAsyncTransaction(new Transaction(accs[0], accs[i], 5.0), keys[0]);
+            System.out.println("Failed transaction below:");
+            sendAsyncTransaction(new Transaction(accs[0], accs[i], 5000.0), keys[0]);
         }
 
         System.out.println("Mining another block");
@@ -268,6 +287,57 @@ public class Client {
         for (int i = 0; i < MAX; i++) {
             System.out.println(getBalance(accs[i].getAccountId(), keys[i]));
         }
+    }
+
+    private static void testSmartContracts() throws IOException, URISyntaxException, InterruptedException {
+        // Create a non-malicious Smart Contract
+        SmartContract contract = new BasicSmartContract();
+
+        // Endorse it
+        SmartContract smartContract = endorse(contract);
+
+        // Try to register it
+        System.out.println(register(smartContract));
+
+        // Create a malicious Smart Contract
+        contract = new WriterSmartContract();
+        // Try to endorse it
+        smartContract = endorse(contract);
+
+        // Try to register it
+        System.out.println(register(smartContract));
+
+        // Try to register unsigned contract
+        SmartContract unsigned = new BasicSmartContract();
+        System.out.println(register(unsigned));
+
+        contract = new SocketSmartContract();
+        endorse(contract);
+
+        contract = new MemoryHogSmartContract();
+        endorse(contract);
+    }
+
+    private static RegisterResult register(SmartContract smartContract) throws URISyntaxException, IOException, InterruptedException {
+        String reqUrl = URL + "/registerSmartContract";
+
+        byte[] bytes = null;
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(smartContract);
+            bytes = bos.toByteArray();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(reqUrl))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        return new ObjectMapper().readValue(response.body(), RegisterResult.class);
     }
 
     private static void proposeBlock(Block block) throws URISyntaxException, IOException, InterruptedException {

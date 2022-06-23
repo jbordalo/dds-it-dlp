@@ -3,9 +3,11 @@ package com.dds.springitdlp.application.consensus;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.ProposeResult;
+import com.dds.springitdlp.application.entities.results.RegisterResult;
 import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
@@ -94,7 +96,22 @@ public class BFTSMaRtServer extends DefaultSingleRecoverable implements CommandL
                         oos.writeObject(result);
                         oos.flush();
 
-                        this.logger.log(Level.INFO, "sendTransaction@Server: sending transaction result");
+                        this.logger.log(Level.INFO, "proposeBlock@Server: proposing block");
+                        return bos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+                case REGISTER_SMART_CONTRACT -> {
+                    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                        SmartContract contract = (SmartContract) objIn.readObject();
+                        RegisterResult result = this.ledgerHandler.registerSmartContract(contract);
+
+                        oos.writeObject(result);
+                        oos.flush();
+
+                        this.logger.log(Level.INFO, "registerSmartContract@Server: registering smart contract");
                         return bos.toByteArray();
                     } catch (IOException e) {
                         e.printStackTrace();
