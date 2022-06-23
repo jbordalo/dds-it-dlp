@@ -10,10 +10,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 public class YCSBClient extends DB {
 
@@ -22,7 +19,8 @@ public class YCSBClient extends DB {
     @Override
     public void init() {
         try {
-            client = new Client();
+            Properties properties = getProperties();
+            client = new Client(Integer.parseInt(properties.getProperty("maxaccounts", String.valueOf(Client.MAX))), properties.getProperty("replicaurl", Client.URL));
             client.initBlockchain();
         } catch (UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException | CertificateException |
                  IOException | URISyntaxException | InterruptedException e) {
@@ -34,7 +32,7 @@ public class YCSBClient extends DB {
     public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
         try {
             Integer k = Integer.valueOf(key);
-            return mapStatus(client.getBalance(Math.abs(k % Client.MAX)).statusCode());
+            return mapStatus(client.getBalance(accRange(k)).statusCode());
         } catch (IOException | URISyntaxException | InterruptedException e) {
             return Status.ERROR;
         }
@@ -49,7 +47,7 @@ public class YCSBClient extends DB {
     public Status update(String table, String key, Map<String, ByteIterator> values) {
         try {
             Integer k = Integer.valueOf(key);
-            return mapStatus(client.requestMineAndProposeBlock(Math.abs(k) % Client.MAX).statusCode());
+            return mapStatus(client.requestMineAndProposeBlock(accRange(k)).statusCode());
         } catch (IOException | URISyntaxException | InterruptedException e) {
             return Status.ERROR;
         }
@@ -58,9 +56,9 @@ public class YCSBClient extends DB {
     @Override
     public Status insert(String table, String key, Map<String, ByteIterator> values) {
         try {
-            //TODO destination is gened as well/ change sendtransaction?
             Integer k = Integer.valueOf(key);
-            return mapStatus(client.sendTransaction(Math.abs(k % Client.MAX), Double.parseDouble(values.get("value").toString())).statusCode());
+            Integer dest = Integer.valueOf(values.get("destination").toString());
+            return mapStatus(client.sendTransaction(accRange(k), accRange(dest), Double.parseDouble(values.get("value").toString())).statusCode());
         } catch (IOException | URISyntaxException | InterruptedException e) {
             return Status.ERROR;
         }
@@ -71,6 +69,9 @@ public class YCSBClient extends DB {
         throw new UnsupportedOperationException();
     }
 
+    private int accRange(int acc) {
+        return Math.abs(acc%Client.MAX);
+    }
     private Status mapStatus(int statusCode) {
         switch (statusCode) {
             case 200:

@@ -22,8 +22,8 @@ import java.security.cert.CertificateException;
 public class Client {
     private static final String ALGORITHM = "SHA512withECDSA";
     private static final HttpClient client = HttpClient.newBuilder().build();
-    public static int MAX = 4;
-    private static String URL = "https://localhost:8080";
+    public static int MAX = 12;
+    public static String URL = "https://localhost:8080";
     private static PrivateKey[] keys;
     private static Account[] accs;
 
@@ -230,19 +230,36 @@ public class Client {
         return processRequest(REQUEST.GET_BALANCE, accs[acc].getAccountId(), keys[acc]);
     }
 
+    public HttpResponse<String> getLedger() throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.GET_LEDGER,null, null);
+    }
+
+    public HttpResponse<String> getGlobal() throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.GET_GLOBAL, null, null);
+    }
+
+    public HttpResponse<String> getTotal(int[] accnums) throws IOException, URISyntaxException, InterruptedException {
+        String [] accounts = new String[accnums.length];
+        for(int i = 0; i < accnums.length; i++){
+            accounts[i] = accs[accnums[i]].getAccountId();
+        }
+        return processRequest(REQUEST.GET_TOTAL, accounts, null);
+    }
+
+    public HttpResponse<String> getExtract(int acc) throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.GET_EXTRACT, accs[acc].getAccountId(), keys[acc]);
+    }
     public void initBlockchain() throws IOException, URISyntaxException, InterruptedException {
         requestMineAndProposeBlock(0);
         for (int i = 1; i < MAX; i++) {
-            for (int j = 0; j < MAX; j++) {
-                processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], Transaction.MINING_REWARD * 10 / ((MAX + 1) * 2)), keys[0]);
-            }
+           processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 20.0), keys[0]);
         }
         requestMineAndProposeBlock(0);
     }
 
 
-    public HttpResponse<String> sendTransaction(int acc, double amount) throws IOException, URISyntaxException, InterruptedException {
-        return processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[acc], accs[(acc + 1) % MAX], amount), keys[acc]);
+    public HttpResponse<String> sendTransaction(int acc, int destAcc, double amount) throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[acc], accs[destAcc], amount), keys[acc]);
     }
 
     private enum REQUEST {
