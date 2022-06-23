@@ -268,9 +268,9 @@ public class Client {
         System.out.println("One for all async");
         for (int i = 1; i < MAX; i++) {
             sendAsyncTransaction(new Transaction(accs[0], accs[i], 5.0), keys[0]);
-            System.out.println("Failed transaction below:");
-            sendAsyncTransaction(new Transaction(accs[0], accs[i], 5000.0), keys[0]);
         }
+        System.out.println("Failed transaction below:");
+        sendAsyncTransaction(new Transaction(accs[0], accs[1], 5000.0), keys[0]);
 
         System.out.println("Mining another block");
         b = getBlock(accs[2], keys[2]);
