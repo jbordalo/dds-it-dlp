@@ -22,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/")
-@ConditionalOnProperty(name = "endorser", havingValue = "false")
+@ConditionalOnProperty(name = "service.enabled")
 public class Controller {
     private final AppService service;
 

@@ -1,7 +1,6 @@
 package com.dds.springitdlp.application.services;
 
 import com.dds.springitdlp.application.consensus.ConsensusPlane;
-import com.dds.springitdlp.application.contracts.Endorser;
 import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
@@ -23,7 +22,6 @@ import java.io.ObjectInputStream;
 import java.util.LinkedList;
 import java.util.List;
 
-// TODO
 @ConditionalOnProperty(name = "endorser", havingValue = "false")
 @Service
 public class AppService {
@@ -32,7 +30,7 @@ public class AppService {
     private final LedgerHandlerConfig config;
 
     @Autowired
-    public AppService(ConsensusPlane consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig, Endorser endorser) {
+    public AppService(ConsensusPlane consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig) {
         this.consensusClient = consensusClient;
         this.ledgerHandler = ledgerHandler;
         this.config = ledgerHandlerConfig;

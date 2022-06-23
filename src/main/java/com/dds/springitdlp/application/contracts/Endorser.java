@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 
 @Component
 public class Endorser {
-
     private final Jail jail;
     private final Transaction mockTransaction;
     private final LedgerHandlerConfig ledgerHandlerConfig;
