@@ -30,6 +30,6 @@ public class Jail {
     }
 
     public void toggle() {
-        System.setSecurityManager(System.getSecurityManager() != this.sm ? this.sm : hold);
+        System.setSecurityManager(System.getSecurityManager() != this.sm ? this.sm : this.hold);
     }
 }

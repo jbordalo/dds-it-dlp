@@ -33,15 +33,13 @@ public class Endorser {
 
             contract.call(mockTransaction);
 
-            // TODO better signature
             contract.setSignature(Cryptography.sign(contract.toString(), this.ledgerHandlerConfig.getPrivateKey()));
-
-            jail.toggle();
-
             return contract;
         } catch (AccessControlException e) {
             System.out.println("Not endorsing smart contract");
             return null;
+        } finally {
+            jail.toggle();
         }
     }
 }
