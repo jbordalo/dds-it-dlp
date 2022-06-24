@@ -30,7 +30,6 @@ public class EndorserController {
 
     @PostMapping("/endorse")
     public byte[] endorse(@RequestBody byte[] smartContract) {
-        // TODO move serialization out (?)
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(smartContract);
              ObjectInput objIn = new ObjectInputStream(byteIn)) {
 

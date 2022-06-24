@@ -10,6 +10,11 @@ import lombok.Setter;
 public class BasicSmartContract implements SmartContract {
     private final long TIME_LIMIT = 24 * 60 * 60 * 1000;
     private String uuid;
+    private String endorserId;
+
+    @Getter
+    @Setter
+    private String signature;
 
     @Override
     public String getUuid() {
@@ -21,9 +26,15 @@ public class BasicSmartContract implements SmartContract {
         this.uuid = uuid;
     }
 
-    @Getter
-    @Setter
-    private String signature;
+    @Override
+    public String getEndorserId() {
+        return this.endorserId;
+    }
+
+    @Override
+    public void setEndorserId(String endorserId) {
+        this.endorserId = endorserId;
+    }
 
     @Override
     public TransactionResultStatus call(Transaction transaction) {

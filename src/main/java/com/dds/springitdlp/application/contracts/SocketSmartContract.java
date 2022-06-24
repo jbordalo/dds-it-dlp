@@ -17,17 +17,8 @@ import java.net.Socket;
 public class SocketSmartContract implements SmartContract {
 
     private String uuid;
+    private String endorserId;
     private String signature;
-
-    @Override
-    public String getUuid() {
-        return this.uuid;
-    }
-
-    @Override
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
 
     @Override
     public TransactionResultStatus call(Transaction transaction) {

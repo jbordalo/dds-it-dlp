@@ -207,7 +207,6 @@ public class Client {
 
         // Have the account that mined transfer money to more accounts
         // This creates money in some accounts for testing
-
         SmartContract smartContract = new BasicSmartContract();
         smartContract = endorse(smartContract);
 

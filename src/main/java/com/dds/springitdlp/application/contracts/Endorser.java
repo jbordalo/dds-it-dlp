@@ -2,7 +2,7 @@ package com.dds.springitdlp.application.contracts;
 
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
-import com.dds.springitdlp.application.ledger.LedgerHandlerConfig;
+import com.dds.springitdlp.application.ledger.ServerKeys;
 import com.dds.springitdlp.cryptography.Cryptography;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,14 +18,14 @@ import java.util.logging.Logger;
 public class Endorser {
     private final Jail jail;
     private final Transaction mockTransaction;
-    private final LedgerHandlerConfig ledgerHandlerConfig;
+    private final ServerKeys serverKeys;
     private final Logger logger;
 
     @Autowired
-    public Endorser(LedgerHandlerConfig ledgerHandlerConfig) {
+    public Endorser(ServerKeys serverKeys) {
         this.jail = new Jail(new Permissions());
         this.mockTransaction = new Transaction(Account.SYSTEM_ACC(), Account.SYSTEM_ACC(), 0.0);
-        this.ledgerHandlerConfig = ledgerHandlerConfig;
+        this.serverKeys = serverKeys;
         this.logger = Logger.getLogger(Endorser.class.getName());
     }
 
@@ -37,7 +37,8 @@ public class Endorser {
             contract.call(mockTransaction);
 
             contract.setUuid(UUID.randomUUID().toString());
-            String signature = Cryptography.sign(contract.getUuid(), this.ledgerHandlerConfig.getPrivateKey());
+            contract.setEndorserId(System.getenv("ENDORSER_ID"));
+            String signature = Cryptography.sign(contract.serialize(), this.serverKeys.getPrivateKey());
             contract.setSignature(signature);
 
             this.logger.log(Level.INFO, "Endorsing smart contract");

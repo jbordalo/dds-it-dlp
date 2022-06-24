@@ -7,7 +7,7 @@ import com.dds.springitdlp.application.entities.Transaction;
 import com.dds.springitdlp.application.entities.results.*;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
-import com.dds.springitdlp.application.ledger.LedgerHandlerConfig;
+import com.dds.springitdlp.application.ledger.ServerKeys;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.cryptography.Cryptography;
@@ -27,13 +27,13 @@ import java.util.List;
 public class AppService {
     private final ConsensusPlane consensusClient;
     private final LedgerHandler ledgerHandler;
-    private final LedgerHandlerConfig config;
+    private final ServerKeys config;
 
     @Autowired
-    public AppService(ConsensusPlane consensusClient, LedgerHandler ledgerHandler, LedgerHandlerConfig ledgerHandlerConfig) {
+    public AppService(ConsensusPlane consensusClient, LedgerHandler ledgerHandler, ServerKeys serverKeys) {
         this.consensusClient = consensusClient;
         this.ledgerHandler = ledgerHandler;
-        this.config = ledgerHandlerConfig;
+        this.config = serverKeys;
     }
 
     public TransactionResultStatus sendTransaction(Transaction transaction) {
@@ -101,8 +101,7 @@ public class AppService {
             if (contract == null || contract.getUuid() == null || contract.getSignature() == null)
                 return RegisterResult.CONTRACT_REJECTED;
 
-            // TODO endorser key
-            if (Cryptography.verify(this.config.getPublicKey(), contract.getUuid(), contract.getSignature())) {
+            if (Cryptography.verify(this.config.getEndorserKey(contract.getEndorserId()), contract.serialize(), contract.getSignature())) {
                 return this.consensusClient.registerSmartContract(contract);
             }
         } catch (IOException | ClassNotFoundException e) {

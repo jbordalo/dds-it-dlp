@@ -4,7 +4,7 @@ WORKDIR /home/gradle/src
 RUN gradle build -x test --no-daemon
 
 FROM openjdk:17
-ENV KEYSTORE_PASSWORD=dds-it-dlp
+ENV TLS_KEYSTORE_PASSWORD=dds-it-dlp
 ENV STORAGE_PATH=mnt/vol/
 ENV SERVER_KEYSTORE=config/keystores/serverKeystore SERVER_KEYSTORE_ALIAS=appservice SERVER_KEYSTORE_PW=ddsdds
 COPY --from=build /home/gradle/src/build/libs/*.jar app.jar

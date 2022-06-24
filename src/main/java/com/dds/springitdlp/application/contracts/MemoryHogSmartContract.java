@@ -6,23 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Arrays;
-
 @Data
 @NoArgsConstructor
 public class MemoryHogSmartContract implements SmartContract {
 
     private String uuid;
+    private String endorserId;
     private String signature;
-
-    @Override
-    public String getUuid() {
-        return this.uuid;
-    }
-
-    @Override
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
 
     @Override
     public TransactionResultStatus call(Transaction transaction) {

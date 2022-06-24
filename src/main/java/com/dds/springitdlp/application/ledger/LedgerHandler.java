@@ -25,12 +25,12 @@ import java.util.logging.Logger;
 @ConditionalOnProperty(name = "endorser", havingValue = "false")
 @Component
 public class LedgerHandler {
-    private final LedgerHandlerConfig config;
+    private final ServerKeys config;
     private final Logger logger;
     private final DataPlane dataPlane;
 
     @Autowired
-    public LedgerHandler(LedgerHandlerConfig config, DataPlane dataPlane) {
+    public LedgerHandler(ServerKeys config, DataPlane dataPlane) {
         this.dataPlane = dataPlane;
         this.config = config;
         this.logger = Logger.getLogger(LedgerHandler.class.getName());
@@ -168,7 +168,7 @@ public class LedgerHandler {
     }
 
     public RegisterResult registerSmartContract(SmartContract contract) {
-        if (!Cryptography.verify(this.config.getPublicKey(), contract.getUuid(), contract.getSignature()))
+        if (!Cryptography.verify(this.config.getEndorserKey(contract.getEndorserId()), contract.serialize(), contract.getSignature()))
             return RegisterResult.CONTRACT_REJECTED;
 
         SmartContractRegistry contracts = this.dataPlane.readSmartContractRegistry();
