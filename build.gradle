@@ -33,6 +33,7 @@ dependencies {
 	// https://mvnrepository.com/artifact/commons-codec/commons-codec
 	implementation 'commons-codec:commons-codec:1.15'
 	// https://mvnrepository.com/artifact/io.netty/netty-all
+	implementation 'site.ycsb:core:0.17.0'
 	implementation 'io.netty:netty-all:4.1.77.Final'
 }
 

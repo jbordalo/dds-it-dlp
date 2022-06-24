@@ -27,18 +27,23 @@ fieldcount=1
 fieldlength=1024
 
 recordcount=20000
-operationcount=0
-workload=com.yahoo.ycsb.workloads.CoreWorkload
+operationcount=100
+workload=com.dds.client.DDSWorkload
 
 readallfields=true
 
-readproportion=0
-updateproportion=1
+insertproportion=0.7
+readproportion=0.2
+updateproportion=0.1
 scanproportion=0
-insertproportion=0
+
 
 requestdistribution=zipfian
 
 #maxexecutiontime=30
 
 smart-initkey=1000
+
+maxaccounts=4
+replicaurl=https://localhost:8080
+toggleasync=false
