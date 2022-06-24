@@ -22,7 +22,7 @@ import java.io.ObjectInputStream;
 import java.util.LinkedList;
 import java.util.List;
 
-@ConditionalOnProperty(name = "endorser", havingValue = "false")
+@ConditionalOnProperty(name = "service.enabled")
 @Service
 public class AppService {
     private final ConsensusPlane consensusClient;

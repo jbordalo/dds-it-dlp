@@ -7,7 +7,9 @@ import java.io.Serializable;
 
 public interface SmartContract extends Serializable {
     String getUuid();
+
     void setUuid(String uuid);
+
     String getEndorserId();
 
     default String serialize() {
@@ -15,7 +17,10 @@ public interface SmartContract extends Serializable {
     }
 
     void setEndorserId(String endorserId);
+
     String getSignature();
+
     void setSignature(String signature);
+
     TransactionResultStatus call(Transaction transaction);
 }

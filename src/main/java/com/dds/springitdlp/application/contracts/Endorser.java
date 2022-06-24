@@ -32,9 +32,11 @@ public class Endorser {
     public SmartContract endorse(SmartContract contract) throws NoPermissionException {
         try {
             // Enforce policies
-            jail.toggle();
+            jail.lock();
 
             contract.call(mockTransaction);
+
+            jail.unlock();
 
             contract.setUuid(UUID.randomUUID().toString());
             contract.setEndorserId(System.getenv("ENDORSER_ID"));
@@ -52,8 +54,7 @@ public class Endorser {
             this.logger.log(Level.WARNING, "Too much memory");
             throw e;
         } finally {
-            // Restore policies for normal functioning
-            jail.toggle();
+            jail.unlock();
         }
     }
 }

@@ -9,7 +9,6 @@ import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.application.services.AppService;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
@@ -17,7 +16,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.security.Security;
 import java.util.List;
 
 @RestController
@@ -28,7 +26,6 @@ public class Controller {
 
     @Autowired
     public Controller(AppService service) {
-        Security.addProvider(new BouncyCastleProvider());
         this.service = service;
     }
 

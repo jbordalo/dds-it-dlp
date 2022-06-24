@@ -10,6 +10,17 @@ services:
     networks:
       dds-network:
         ipv4_address: 172.26.0.99
+  endorser0:
+    image: jc/dds-it-dlp-endorser
+    ports:
+      - "8090:8090"
+    environment:
+      - ENDORSER_ID=0
+      - PORT=8090
+      - SPRING_PROFILES_ACTIVE=endorser,tls
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.21
   service0:
     image: jc/dds-it-dlp
     depends_on:
@@ -47,6 +58,17 @@ services:
     networks:
       dds-network:
         ipv4_address: 172.26.1.99
+  endorser1:
+    image: jc/dds-it-dlp-endorser
+    ports:
+      - "8091:8091"
+    environment:
+      - ENDORSER_ID=1
+      - PORT=8091
+      - SPRING_PROFILES_ACTIVE=endorser,tls
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.31
   service1:
     image: jc/dds-it-dlp
     depends_on:
@@ -54,7 +76,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - REDIS_PORT=6380
+      - REDIS_PORT=6379
       - REPLICA_ID=1
       - PORT=8081
       - SPRING_PROFILES_ACTIVE=service,redis,tls
@@ -68,7 +90,7 @@ services:
     ports:
       - "11010:11010"
     environment:
-      - REDIS_PORT=6380
+      - REDIS_PORT=6379
       - REPLICA_ID=1
       - SPRING_PROFILES_ACTIVE=bft,redis
     networks:
@@ -84,6 +106,17 @@ services:
     networks:
       dds-network:
         ipv4_address: 172.26.2.99
+  endorser2:
+    image: jc/dds-it-dlp-endorser
+    ports:
+      - "8092:8092"
+    environment:
+      - ENDORSER_ID=2
+      - PORT=8092
+      - SPRING_PROFILES_ACTIVE=endorser,tls
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.41
   service2:
     image: jc/dds-it-dlp
     depends_on:
@@ -91,7 +124,7 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - REDIS_PORT=6381
+      - REDIS_PORT=6379
       - REPLICA_ID=2
       - PORT=8082
       - SPRING_PROFILES_ACTIVE=service,redis,tls
@@ -105,7 +138,7 @@ services:
     ports:
       - "11020:11020"
     environment:
-      - REDIS_PORT=6381
+      - REDIS_PORT=6379
       - REPLICA_ID=2
       - SPRING_PROFILES_ACTIVE=bft,redis
     networks:
@@ -121,6 +154,17 @@ services:
     networks:
       dds-network:
         ipv4_address: 172.26.3.99
+  endorser3:
+    image: jc/dds-it-dlp-endorser
+    ports:
+      - "8093:8093"
+    environment:
+      - ENDORSER_ID=3
+      - PORT=8093
+      - SPRING_PROFILES_ACTIVE=endorser,tls
+    networks:
+      dds-network:
+        ipv4_address: 172.26.0.51
   service3:
     image: jc/dds-it-dlp
     depends_on:
@@ -128,7 +172,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - REDIS_PORT=6382
+      - REDIS_PORT=6379
       - REPLICA_ID=3
       - PORT=8083
       - SPRING_PROFILES_ACTIVE=service,redis,tls
@@ -142,7 +186,7 @@ services:
     ports:
       - "11030:11030"
     environment:
-      - REDIS_PORT=6382
+      - REDIS_PORT=6379
       - REPLICA_ID=3
       - SPRING_PROFILES_ACTIVE=bft,redis
     networks:
@@ -154,5 +198,5 @@ networks:
       config:
         - subnet: 172.26.0.0/16
           gateway: 172.26.0.1
-volumes:
-  redis:
+#volumes:
+#  redis:

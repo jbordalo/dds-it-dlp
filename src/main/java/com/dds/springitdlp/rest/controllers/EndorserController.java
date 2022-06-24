@@ -2,7 +2,6 @@ package com.dds.springitdlp.rest.controllers;
 
 import com.dds.springitdlp.application.contracts.Endorser;
 import com.dds.springitdlp.application.contracts.SmartContract;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
@@ -14,17 +13,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.naming.NoPermissionException;
 import java.io.*;
-import java.security.Security;
 
 @RestController
 @RequestMapping("/")
-@ConditionalOnProperty(name = "endorser")
+@ConditionalOnProperty(name = "endorser", havingValue = "true")
 public class EndorserController {
     private final Endorser endorser;
 
     @Autowired
     public EndorserController(Endorser endorser) {
-        Security.addProvider(new BouncyCastleProvider());
         this.endorser = endorser;
     }
 

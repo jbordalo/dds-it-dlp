@@ -7,12 +7,12 @@ import java.security.ProtectionDomain;
 
 public class Jail {
 
-    private final SecurityManager sm;
-    private final SecurityManager hold;
+    private final SecurityManager jailManager;
+    private final SecurityManager systemManager;
 
     public Jail(Permissions permissions) {
-        this.hold = System.getSecurityManager();
-        this.sm = new SecurityManager() {
+        this.systemManager = System.getSecurityManager();
+        this.jailManager = new SecurityManager() {
             @Override
             public void checkPermission(Permission perm) {
                 assert perm != null;
@@ -29,7 +29,11 @@ public class Jail {
         };
     }
 
-    public void toggle() {
-        System.setSecurityManager(System.getSecurityManager() != this.sm ? this.sm : this.hold);
+    public void lock() {
+        System.setSecurityManager(this.jailManager);
+    }
+
+    public void unlock() {
+        System.setSecurityManager(this.systemManager);
     }
 }
