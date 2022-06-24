@@ -271,9 +271,9 @@ public class Client {
         if (res == RegisterResult.CONTRACT_REGISTERED) {
             smartContractUuid = smartContract.getUuid();
             // This one should pass
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 10.0), keys[0]).statusCode());
+            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 10.0, smartContractUuid), keys[0]).statusCode());
             // This one should fail
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 8.5), keys[0]).statusCode());
+            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 8.5, smartContractUuid), keys[0]).statusCode());
         }
 
         // This one should fail
