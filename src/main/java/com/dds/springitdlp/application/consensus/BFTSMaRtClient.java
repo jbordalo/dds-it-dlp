@@ -24,7 +24,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@ConditionalOnProperty(name = "service.enabled")
+@ConditionalOnProperty(name = "consensus.plane", havingValue = "bftsmart")
 @Component
 public class BFTSMaRtClient implements ConsensusPlane {
     AsynchServiceProxy serviceProxy;
