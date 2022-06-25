@@ -1,8 +1,6 @@
 package com.dds.springitdlp.application.consensus;
 
 import applicationInterface.ApplicationInterface;
-import bftsmart.tom.AsynchServiceProxy;
-import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
