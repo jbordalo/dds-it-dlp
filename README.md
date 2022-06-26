@@ -32,11 +32,11 @@ The replica ip addresses and ids in `docker-compose.yml` must match the file `co
 
 The `contact` property in file `config/config-docker.properties` must match the ip address and port of the first replica. 
 
-## Running the client
+## Running an interactive client
 
-`./gradlew :client`
+`./gradlew :interactiveClient`
 
-## Running the benchmark
+## Running YCSB
 
 `./gradlew :benchmark --args="-P config/workloads/workloada"`
 

@@ -10,7 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
-public class TestClient {
+public class InteractiveClient {
     public static void main(String[] args) throws UnrecoverableKeyException, CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Starting interactive Test Client (start with defaults - replica url localhost8080 and 12 accs?): Y/N?");
