@@ -33,10 +33,10 @@ public class TestClient {
             switch (command[0].toUpperCase()) {
                 case "TRANSFER", "T":
                     boolean async = false;
-                    if(command.length > 4) async = Boolean.parseBoolean(command[4]);
+                    if (command.length > 4) async = Boolean.parseBoolean(command[4]);
                     response = client.sendTransaction(Integer.parseInt(command[1]), Integer.parseInt(command[2]), Double.parseDouble(command[3]), async);
                     System.out.println("TRANSACTION:" + response.statusCode());
-                    if(async) System.out.println(response.body());
+                    if (async) System.out.println(response.body());
                     break;
                 case "MINE", "M":
                     response = client.requestMineAndProposeBlock(Integer.parseInt(command[1]));

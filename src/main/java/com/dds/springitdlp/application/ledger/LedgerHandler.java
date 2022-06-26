@@ -13,6 +13,7 @@ import com.dds.springitdlp.cryptography.Cryptography;
 import com.dds.springitdlp.dataPlane.DataPlane;
 import com.dds.springitdlp.dataPlane.SmartContractRegistry;
 import com.dds.springitdlp.dataPlane.TransactionPool;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -47,22 +48,10 @@ public class LedgerHandler {
     public TransactionResult sendTransaction(Transaction transaction, boolean signed) {
         this.logger.log(Level.INFO, "sendTransaction@Server: " + transaction.toString());
 
-        // TODO where check
+        // Running smart contract
         if (transaction.getSmartContractUuid() != null) {
-            SmartContract smartContract = this.dataPlane.readSmartContractRegistry().getSmartContract(transaction.getSmartContractUuid());
-
-            if (smartContract == null) {
-                this.logger.log(Level.WARNING, "sendTransaction@Server: Didn't find provided smart contract");
-                return this.getResult(TransactionResultStatus.FAILED_TRANSACTION, signed);
-            }
-
-            this.logger.log(Level.INFO, "sendTransaction@Server: Running provided smart contract");
-            TransactionResultStatus smartContractResult = smartContract.call(transaction);
-            if (smartContractResult != TransactionResultStatus.OK_TRANSACTION) {
-                this.logger.log(Level.INFO, "sendTransaction@Server: Transaction not accepted by smart contract");
-                return this.getResult(smartContractResult, signed);
-            }
-            this.logger.log(Level.INFO, "sendTransaction@Server: Transaction accepted by smart contract");
+            TransactionResult smartContractResult = runSmartContract(transaction, signed);
+            if (smartContractResult != null) return smartContractResult;
         }
 
         if (transaction.getAmount() <= 0 || !Transaction.verify(transaction) ||
@@ -82,6 +71,26 @@ public class LedgerHandler {
         this.dataPlane.writeTransactionPool(transactionPool);
 
         return this.getResult(TransactionResultStatus.OK_TRANSACTION, signed);
+    }
+
+    @Nullable
+    private TransactionResult runSmartContract(Transaction transaction, boolean signed) {
+        SmartContract smartContract = this.dataPlane.readSmartContractRegistry().getSmartContract(transaction.getSmartContractUuid());
+
+        if (smartContract == null) {
+            this.logger.log(Level.WARNING, "sendTransaction@Server: Didn't find provided smart contract");
+            return this.getResult(TransactionResultStatus.FAILED_TRANSACTION, signed);
+        }
+
+        this.logger.log(Level.INFO, "sendTransaction@Server: Running provided smart contract");
+
+        TransactionResultStatus smartContractResult = smartContract.call(transaction);
+        if (smartContractResult != TransactionResultStatus.OK_TRANSACTION) {
+            this.logger.log(Level.INFO, "sendTransaction@Server: Transaction not accepted by smart contract");
+            return this.getResult(smartContractResult, signed);
+        }
+        this.logger.log(Level.INFO, "sendTransaction@Server: Transaction accepted by smart contract");
+        return null;
     }
 
     private TransactionResult getResult(TransactionResultStatus result, boolean signed) {

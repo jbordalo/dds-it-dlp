@@ -10,7 +10,6 @@ public class DataPlaneMemory implements DataPlane {
 
     private Ledger ledger = new Ledger();
     private TransactionPool transactionPool = new TransactionPool();
-
     private SmartContractRegistry smartContractRegistry = new SmartContractRegistry();
 
     @Override
