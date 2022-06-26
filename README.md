@@ -36,6 +36,10 @@ The `contact` property in file `config/config-docker.properties` must match the 
 
 `./gradlew :client`
 
+## Running the benchmark
+
+`./gradlew :benchmark --args="-P config/workloads/workloada"`
+
 ## Authors
 
 -   **João Bordalo** - _Initial work_ - [jbordalo](https://github.com/jbordalo)

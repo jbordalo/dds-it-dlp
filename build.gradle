@@ -53,8 +53,14 @@ idea {
 }
 
 task client(type:JavaExec) {
-   main = "com.dds.client.Client"
+   mainClass = "com.dds.client.Client"
    classpath = sourceSets.main.runtimeClasspath
+}
+
+task benchmark(type:JavaExec) {
+	mainClass = "site.ycsb.Client"
+	args "-t -db com.dds.client.YCSBClient"
+	classpath = sourceSets.main.runtimeClasspath
 }
 
 tasks.withType(JavaExec) {
