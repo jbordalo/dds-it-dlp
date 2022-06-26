@@ -22,7 +22,9 @@ public class YCSBClient extends DB {
         try {
             Properties properties = getProperties();
             async = Boolean.parseBoolean(properties.getProperty("toggleasync"));
-            client = new Client(Integer.parseInt(properties.getProperty("maxaccounts", String.valueOf(Client.MAX))), properties.getProperty("replicaurl", Client.URL));
+            client = new Client(Integer.parseInt(properties.getProperty("maxaccounts", String.valueOf(Client.MAX))),
+                    properties.getProperty("replicaurl", Client.URL), properties.getProperty("keystore"),
+                    properties.getProperty("keystorepassword"), properties.getProperty("keystorealias"), properties.getProperty("savedaccdata"));
             client.initBlockchain();
         } catch (UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException | CertificateException |
                  IOException | URISyntaxException | InterruptedException e) {

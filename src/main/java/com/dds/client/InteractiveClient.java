@@ -15,14 +15,18 @@ public class InteractiveClient {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Starting interactive Test Client (start with defaults - replica url localhost8080 and 12 accs?): Y/N?");
         Client client;
+        String keystore = System.getenv("KEYSTORE");
+        String keystorePw = System.getenv("KEYSTORE_PW");
+        String keystoreAlias = System.getenv("KEYSTORE_ALIAS");
+        String savedData =  System.getenv("ACC_SAVE_FILE");
         if (in.readLine().equalsIgnoreCase("Y")) {
-            client = new Client();
+            client = new Client(keystore, keystorePw, keystoreAlias, savedData);
         } else {
             System.out.println("Insert replica url:");
             String replicaURL = in.readLine();
             System.out.println("Insert number of accounts (max = 12):");
             int accs = Math.min(Client.MAX, Integer.parseInt(in.readLine()));
-            client = new Client(accs, replicaURL);
+            client = new Client(accs, replicaURL, keystore, keystorePw, keystoreAlias, savedData);
         }
         System.out.println("Initializing blockchain... Acc0 will have transferable currency.");
         client.initBlockchain();

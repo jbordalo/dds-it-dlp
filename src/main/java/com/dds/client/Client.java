@@ -8,9 +8,11 @@ import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.cryptography.Cryptography;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,29 +28,29 @@ public class Client {
     private static final HttpClient client = HttpClient.newBuilder().build();
     public static int MAX = 12;
     public static String URL = "https://localhost:8080";
-    private static final String ENDORSER_URL = "https://localhost:8090";
+    private static String ENDORSER_URL = "https://localhost:8090";
     private static PrivateKey[] keys;
     private static Account[] accs;
 
-    public Client() throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
+    public Client(String keystore, String password, String keystoreAlias, String accData) throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
         Security.addProvider(new BouncyCastleProvider());
-        initializeAccounts(Cryptography.initializeKeystore("config/keystores/keyStore", "ddsdds"));
+        initializeAccounts(Cryptography.initializeKeystore(keystore, password), accData, keystoreAlias, password);
     }
 
-    public Client(int maxAccs, String replicaURL) throws CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    public Client(int maxAccs, String replicaURL, String keystore, String password, String keystoreAlias, String accData) throws CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
         MAX = maxAccs;
         URL = replicaURL;
 
         Security.addProvider(new BouncyCastleProvider());
-        initializeAccounts(Cryptography.initializeKeystore("config/keystores/keyStore", "ddsdds"));
+        initializeAccounts(Cryptography.initializeKeystore(keystore, password), accData, keystoreAlias, password);
     }
 
-    private static void initializeAccounts(KeyStore keyStore) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {
+    private static void initializeAccounts(KeyStore keyStore, String accData, String keystoreAlias, String keystoreAliasPassword) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {
         keys = new PrivateKey[MAX];
         accs = new Account[MAX];
         int count;
         try {
-            FileInputStream fi = new FileInputStream("accData.txt");
+            FileInputStream fi = new FileInputStream(accData);
             ObjectInputStream oi = new ObjectInputStream(fi);
             int saved = oi.readInt();
             for (count = 0; count < saved && count < MAX; count++) {
@@ -61,12 +63,13 @@ public class Client {
 
         MessageDigest hash = MessageDigest.getInstance("SHA-256");
         try {
-            FileOutputStream f = new FileOutputStream("accData.txt");
+            FileOutputStream f = new FileOutputStream(accData);
             ObjectOutputStream o = new ObjectOutputStream(f);
             o.writeInt(MAX);
             for (int i = count; i < MAX; i++) {
-                keys[i] = (PrivateKey) keyStore.getKey("dds" + i, "ddsdds".toCharArray());
-                String pubKey64 = Base64.encodeBase64URLSafeString(keyStore.getCertificate("dds" + i).getPublicKey().getEncoded());
+
+                keys[i] = (PrivateKey) keyStore.getKey(keystoreAlias + i, keystoreAliasPassword.toCharArray());
+                String pubKey64 = Base64.encodeBase64URLSafeString(keyStore.getCertificate(keystoreAlias + i).getPublicKey().getEncoded());
                 String emailtime = i + "bacinta01@greatestemail.com" + System.currentTimeMillis() + new SecureRandom().nextInt();
                 accs[i] = new Account(Base64.encodeBase64URLSafeString(hash.digest(emailtime.getBytes(StandardCharsets.UTF_8))) + pubKey64);
                 o.writeObject(accs[i]);
@@ -89,7 +92,7 @@ public class Client {
         // Try to register it
         RegisterResult result = registeredResponse(smartContract);
         System.out.println("Non-malicious SM " + result);
-        assert(result.equals(RegisterResult.CONTRACT_REGISTERED));
+        assert (result.equals(RegisterResult.CONTRACT_REGISTERED));
 
         // Create a malicious Smart Contract
         contract = new WriterSmartContract();
@@ -98,25 +101,25 @@ public class Client {
 
         // Try to register it
         result = registeredResponse(smartContract);
-        System.out.println("Malicious SMs\nWriter SM "+result);
+        System.out.println("Malicious SMs\nWriter SM " + result);
         assert (result.equals(RegisterResult.CONTRACT_REJECTED));
 
         // Try to register unsigned contract
         SmartContract unsigned = new BasicSmartContract();
         result = registeredResponse(unsigned);
-        System.out.println("Unsigned SM "+result);
+        System.out.println("Unsigned SM " + result);
         assert (result.equals(RegisterResult.CONTRACT_REJECTED));
 
         contract = new SocketSmartContract();
         endorse(contract);
         result = registeredResponse(contract);
-        System.out.println("Socket Using SM "+result);
+        System.out.println("Socket Using SM " + result);
         assert (result.equals(RegisterResult.CONTRACT_REJECTED));
 
         contract = new MemoryHogSmartContract();
         endorse(contract);
         result = registeredResponse(contract);
-        System.out.println("Memory Hog SM "+result);
+        System.out.println("Memory Hog SM " + result);
         assert (result.equals(RegisterResult.CONTRACT_REJECTED));
     }
 
@@ -308,13 +311,20 @@ public class Client {
         }
     }
 
+    private static <T> T defaultWhenNull(@Nullable T object, @NonNull T def) {
+        return (object == null) ? def : object;
+    }
 
     public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, KeyStoreException {
         Security.addProvider(new BouncyCastleProvider());
 
-        KeyStore keyStore = Cryptography.initializeKeystore("config/keystores/keyStore", "ddsdds");
+        MAX = Integer.parseInt(defaultWhenNull(System.getenv("MAX_ACCS"), String.valueOf(MAX)));
+        ENDORSER_URL = defaultWhenNull(System.getenv("ENDORSER_URL"), ENDORSER_URL);
+        URL = defaultWhenNull(System.getenv("REPLICA_URL"), ENDORSER_URL);
 
-        initializeAccounts(keyStore);
+        KeyStore keyStore = Cryptography.initializeKeystore(System.getenv("KEYSTORE"), System.getenv("KEYSTORE_PW"));
+
+        initializeAccounts(keyStore, System.getenv("ACC_SAVE_FILE"), System.getenv("KEYSTORE_ALIAS"), System.getenv("KEYSTORE_PW"));
 
         testSmartContracts();
 
