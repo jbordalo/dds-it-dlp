@@ -30,6 +30,8 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+	implementation files("lib/BlockmessLib.jar")
+
 	// https://mvnrepository.com/artifact/commons-codec/commons-codec
 	implementation 'commons-codec:commons-codec:1.15'
 	// https://mvnrepository.com/artifact/io.netty/netty-all
