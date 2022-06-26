@@ -1,6 +1,7 @@
-package com.dds.springitdlp.application.consensus;
+package com.dds.springitdlp.application.consensus.blockmess;
 
 import applicationInterface.ApplicationInterface;
+import com.dds.springitdlp.application.consensus.ConsensusServer;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

@@ -1,8 +1,9 @@
-package com.dds.springitdlp.application.consensus;
+package com.dds.springitdlp.application.consensus.bftsmart;
 
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
+import com.dds.springitdlp.application.consensus.ConsensusServer;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.LedgerHandler;
 import org.springframework.beans.factory.annotation.Autowired;

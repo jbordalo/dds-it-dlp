@@ -1,4 +1,4 @@
-package com.dds.springitdlp.application.consensus;
+package com.dds.springitdlp.application.consensus.blockmess;
 
 import applicationInterface.ReplyListener;
 import com.dds.springitdlp.application.entities.results.TransactionResult;

@@ -1,7 +1,6 @@
 package com.dds.springitdlp.application.consensus;
 
-import bftsmart.tom.AsynchServiceProxy;
-import bftsmart.tom.core.messages.TOMMessageType;
+import com.dds.springitdlp.application.consensus.bftsmart.BFTSMaRtClient;
 import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
@@ -10,6 +9,7 @@ import com.dds.springitdlp.application.entities.results.RegisterResult;
 import com.dds.springitdlp.application.entities.results.TransactionResult;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -24,17 +24,16 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@ConditionalOnProperty(name = "consensus.plane", havingValue = "bftsmart")
+@ConditionalOnProperty(name = "service.enabled")
 @Component
-public class BFTSMaRtClient implements ConsensusPlane {
-    AsynchServiceProxy serviceProxy;
-    Logger logger;
-    private final long TIMEOUT = 10;
+public class ConsensusClient implements ConsensusPlane {
 
-    public BFTSMaRtClient() {
-        this.logger = Logger.getLogger(BFTSMaRtClient.class.getName());
-        int id = Integer.parseInt(System.getenv().get("REPLICA_ID"));
-        this.serviceProxy = new AsynchServiceProxy(id);
+    Logger logger = Logger.getLogger(BFTSMaRtClient.class.getName());
+    PluggableConsensus pluggableConsensus;
+
+    @Autowired
+    public ConsensusClient(PluggableConsensus pluggableConsensus) {
+        this.pluggableConsensus = pluggableConsensus;
     }
 
     @Override
@@ -43,7 +42,7 @@ public class BFTSMaRtClient implements ConsensusPlane {
             oos.writeObject(LedgerRequestType.SEND_TRANSACTION);
             oos.writeObject(transaction);
             byte[] bytes = bos.toByteArray();
-            byte[] reply = serviceProxy.invokeOrdered(bytes);
+            byte[] reply = this.pluggableConsensus.orderedOperation(bytes);
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
@@ -63,9 +62,10 @@ public class BFTSMaRtClient implements ConsensusPlane {
             oos.writeObject(transaction);
             byte[] bytes = bos.toByteArray();
             CompletableFuture<List<TransactionResult>> future = new CompletableFuture<>();
-            this.serviceProxy.invokeAsynchRequest(bytes, new BFTReplyHandler(serviceProxy, future), TOMMessageType.ORDERED_REQUEST);
 
-            List<TransactionResult> reply = future.get(TIMEOUT, TimeUnit.SECONDS);
+            this.pluggableConsensus.asyncOrderedOperation(bytes, future);
+
+            List<TransactionResult> reply = future.get(this.pluggableConsensus.getDefaultTimeout(), TimeUnit.SECONDS);
 
             this.logger.log(Level.INFO, "sendTransaction@Client: sent transaction");
             return reply;
@@ -87,7 +87,7 @@ public class BFTSMaRtClient implements ConsensusPlane {
             objOut.flush();
             byteOut.flush();
 
-            byte[] reply = this.serviceProxy.invokeUnordered(byteOut.toByteArray());
+            byte[] reply = this.pluggableConsensus.unorderedOperation(byteOut.toByteArray());
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
@@ -110,7 +110,7 @@ public class BFTSMaRtClient implements ConsensusPlane {
             objOut.flush();
             byteOut.flush();
 
-            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+            byte[] reply = this.pluggableConsensus.unorderedOperation(byteOut.toByteArray());
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
@@ -138,7 +138,7 @@ public class BFTSMaRtClient implements ConsensusPlane {
             objOut.flush();
             byteOut.flush();
 
-            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+            byte[] reply = this.pluggableConsensus.unorderedOperation(byteOut.toByteArray());
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
@@ -168,7 +168,7 @@ public class BFTSMaRtClient implements ConsensusPlane {
             objOut.flush();
             byteOut.flush();
 
-            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+            byte[] reply = this.pluggableConsensus.unorderedOperation(byteOut.toByteArray());
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
@@ -194,7 +194,7 @@ public class BFTSMaRtClient implements ConsensusPlane {
             objOut.flush();
             byteOut.flush();
 
-            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+            byte[] reply = this.pluggableConsensus.unorderedOperation(byteOut.toByteArray());
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
@@ -213,7 +213,7 @@ public class BFTSMaRtClient implements ConsensusPlane {
             oos.writeObject(block);
 
             byte[] bytes = bos.toByteArray();
-            byte[] reply = this.serviceProxy.invokeOrdered(bytes);
+            byte[] reply = this.pluggableConsensus.orderedOperation(bytes);
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
@@ -233,7 +233,7 @@ public class BFTSMaRtClient implements ConsensusPlane {
             oos.writeObject(contract);
 
             byte[] bytes = bos.toByteArray();
-            byte[] reply = this.serviceProxy.invokeOrdered(bytes);
+            byte[] reply = this.pluggableConsensus.orderedOperation(bytes);
 
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
@@ -245,4 +245,5 @@ public class BFTSMaRtClient implements ConsensusPlane {
         }
         return RegisterResult.CONTRACT_REJECTED;
     }
+
 }

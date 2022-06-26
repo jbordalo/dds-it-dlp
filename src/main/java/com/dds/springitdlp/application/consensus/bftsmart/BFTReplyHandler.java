@@ -1,4 +1,4 @@
-package com.dds.springitdlp.application.consensus;
+package com.dds.springitdlp.application.consensus.bftsmart;
 
 import bftsmart.communication.client.ReplyListener;
 import bftsmart.tom.AsynchServiceProxy;
