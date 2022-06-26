@@ -87,7 +87,9 @@ public class Client {
         SmartContract smartContract = endorse(contract);
 
         // Try to register it
-        System.out.println(register(smartContract));
+        RegisterResult result = registeredResponse(smartContract);
+        System.out.println("Non-malicious SM " + result);
+        assert(result.equals(RegisterResult.CONTRACT_REGISTERED));
 
         // Create a malicious Smart Contract
         contract = new WriterSmartContract();
@@ -95,38 +97,31 @@ public class Client {
         smartContract = endorse(contract);
 
         // Try to register it
-        System.out.println(register(smartContract));
+        result = registeredResponse(smartContract);
+        System.out.println("Malicious SMs\nWriter SM "+result);
+        assert (result.equals(RegisterResult.CONTRACT_REJECTED));
 
         // Try to register unsigned contract
         SmartContract unsigned = new BasicSmartContract();
-        System.out.println(register(unsigned));
+        result = registeredResponse(unsigned);
+        System.out.println("Unsigned SM "+result);
+        assert (result.equals(RegisterResult.CONTRACT_REJECTED));
 
         contract = new SocketSmartContract();
         endorse(contract);
+        result = registeredResponse(contract);
+        System.out.println("Socket Using SM "+result);
+        assert (result.equals(RegisterResult.CONTRACT_REJECTED));
 
         contract = new MemoryHogSmartContract();
         endorse(contract);
+        result = registeredResponse(contract);
+        System.out.println("Memory Hog SM "+result);
+        assert (result.equals(RegisterResult.CONTRACT_REJECTED));
     }
 
-    public static SmartContract endorse(SmartContract smartContract) throws IOException, URISyntaxException, InterruptedException {
-        String reqUrl = ENDORSER_URL + "/endorse";
-
-        byte[] bytes = null;
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(smartContract);
-            bytes = bos.toByteArray();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(reqUrl))
-                .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
-                .build();
-
-        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
-
+    private static SmartContract endorse(SmartContract smartContract) throws IOException, URISyntaxException, InterruptedException {
+        HttpResponse<byte[]> response = processRequest(REQUEST.ENDORSE, smartContract, null);
         if (response.statusCode() == 200) {
             byte[] reply = response.body();
 
@@ -141,32 +136,15 @@ public class Client {
         return null;
     }
 
-    private static RegisterResult register(SmartContract smartContract) throws URISyntaxException, IOException, InterruptedException {
-        String reqUrl = URL + "/registerSmartContract";
-
-        byte[] bytes = null;
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(smartContract);
-            bytes = bos.toByteArray();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(reqUrl))
-                .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
-                .build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
+    private static RegisterResult registeredResponse(SmartContract smartContract) throws IOException, URISyntaxException, InterruptedException {
+        HttpResponse<String> response = processRequest(REQUEST.REGISTER_RESULT, smartContract, null);
         return new ObjectMapper().readValue(response.body(), RegisterResult.class);
     }
 
-    private static HttpResponse<String> processRequest(REQUEST REQUEST, Object obj, PrivateKey key) throws IOException, URISyntaxException, InterruptedException {
+    private static HttpResponse processRequest(REQUEST REQUEST, Object obj, PrivateKey key) throws IOException, URISyntaxException, InterruptedException {
+        String reqUrl = URL + REQUEST.getUrl();
         switch (REQUEST) {
             case GET_BLOCK, GET_TOTAL, PROPOSE_BLOCK -> {
-                String reqUrl = URL + REQUEST.getUrl();
                 String json = new ObjectMapper().writeValueAsString(obj);
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(new URI(reqUrl))
@@ -177,7 +155,6 @@ public class Client {
                 return client.send(request, HttpResponse.BodyHandlers.ofString());
             }
             case GET_GLOBAL, GET_LEDGER -> {
-                String reqUrl = URL + REQUEST.getUrl();
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(new URI(reqUrl))
                         .GET()
@@ -186,8 +163,7 @@ public class Client {
                 return client.send(request, HttpResponse.BodyHandlers.ofString());
             }
             case GET_BALANCE, GET_EXTRACT -> {
-                String accountId = (String) obj;
-                String reqUrl = URL + REQUEST.getUrl() + accountId;
+                reqUrl = reqUrl + obj; //obj is accId
                 String signable = "GET " + reqUrl + " " + ALGORITHM;
                 String signature = Cryptography.sign(signable, key);
 
@@ -200,7 +176,7 @@ public class Client {
             }
             case SEND_TRANSACTION, SEND_ASYNC_TRANSACTION -> {
                 Transaction transaction = (Transaction) obj;
-                String reqUrl = URL + REQUEST.getUrl() + transaction.getOrigin().getAccountId();
+                reqUrl = reqUrl + transaction.getOrigin().getAccountId();
 
                 String signature = Cryptography.sign(transaction.toString(), key);
                 transaction.setSignature(signature);
@@ -214,8 +190,32 @@ public class Client {
 
                 return client.send(request, HttpResponse.BodyHandlers.ofString());
             }
+            case ENDORSE -> {
+                HttpRequest request = buildSmartContractRequest(obj, reqUrl);
+                return client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            }
+            case REGISTER_RESULT -> {
+                HttpRequest request = buildSmartContractRequest(obj, reqUrl);
+                return client.send(request, HttpResponse.BodyHandlers.ofString());
+            }
         }
         return null;
+    }
+
+    private static HttpRequest buildSmartContractRequest(Object obj, String reqUrl) throws URISyntaxException {
+        byte[] bytes = null;
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(obj);
+            bytes = bos.toByteArray();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return HttpRequest.newBuilder()
+                .uri(new URI(reqUrl))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
+                .build();
     }
 
     private static BlockRequest createBlockRequest(Account account, PrivateKey key) {
@@ -234,6 +234,78 @@ public class Client {
             i++;
         }
         return block;
+    }
+
+    public HttpResponse<String> requestMineAndProposeBlock(int acc) throws IOException, URISyntaxException, InterruptedException {
+        HttpResponse<String> response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[acc], keys[acc]), null);
+        if (response.statusCode() == 200) {
+            Block b = new ObjectMapper().readValue(response.body(), Block.class);
+            b = mineBlock(b);
+            return processRequest(REQUEST.PROPOSE_BLOCK, b, null);
+        }
+        return response;
+    }
+
+    public HttpResponse<String> getBalance(int acc) throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.GET_BALANCE, accs[acc].getAccountId(), keys[acc]);
+    }
+
+    public HttpResponse<String> getLedger() throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.GET_LEDGER, null, null);
+    }
+
+    public HttpResponse<String> getGlobal() throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.GET_GLOBAL, null, null);
+    }
+
+    public HttpResponse<String> getTotal(int[] accnums) throws IOException, URISyntaxException, InterruptedException {
+        String[] accounts = new String[accnums.length];
+        for (int i = 0; i < accnums.length; i++) {
+            accounts[i] = accs[accnums[i]].getAccountId();
+        }
+        return processRequest(REQUEST.GET_TOTAL, accounts, null);
+    }
+
+    public HttpResponse<String> getExtract(int acc) throws IOException, URISyntaxException, InterruptedException {
+        return processRequest(REQUEST.GET_EXTRACT, accs[acc].getAccountId(), keys[acc]);
+    }
+
+    public void initBlockchain() throws IOException, URISyntaxException, InterruptedException {
+        requestMineAndProposeBlock(0);
+        for (int i = 1; i < MAX; i++) {
+            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 12.50), keys[0]);
+        }
+        requestMineAndProposeBlock(0);
+    }
+
+    public HttpResponse<String> sendTransaction(int acc, int destAcc, double amount, boolean async) throws IOException, URISyntaxException, InterruptedException {
+        if (async)
+            return processRequest(REQUEST.SEND_ASYNC_TRANSACTION, new Transaction(accs[acc], accs[destAcc], amount), keys[acc]);
+        return processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[acc], accs[destAcc], amount), keys[acc]);
+    }
+
+    private enum REQUEST {
+        GET_BALANCE("/balance?accountId="),
+        GET_LEDGER("/ledger"),
+        GET_GLOBAL("/globalLedgerValue"),
+        GET_TOTAL("/totalValue"),
+        GET_EXTRACT("/extract?accountId="),
+        SEND_TRANSACTION("/sendTransaction?accountId="),
+        SEND_ASYNC_TRANSACTION("/sendAsyncTransaction?accountId="),
+        GET_BLOCK("/block"),
+        PROPOSE_BLOCK("/proposeBlock"),
+        REGISTER_RESULT("/registerSmartContract"),
+        ENDORSE("/endorse");
+
+        private final String url;
+
+        REQUEST(String s) {
+            this.url = s;
+        }
+
+        String getUrl() {
+            return url;
+        }
     }
 
 
@@ -264,7 +336,7 @@ public class Client {
         smartContract = endorse(smartContract);
 
         // We need to test if was accepted, depends on status code, check testContracts()
-        RegisterResult res = register(smartContract);
+        RegisterResult res = registeredResponse(smartContract);
 
         String smartContractUuid;
         // We also check for REGISTER / REJECTED
@@ -344,76 +416,6 @@ public class Client {
         System.out.println("Final balances");
         for (int i = 0; i < MAX; i++) {
             System.out.println(processRequest(REQUEST.GET_BALANCE, accs[i].getAccountId(), keys[i]).body());
-        }
-    }
-
-    public HttpResponse<String> requestMineAndProposeBlock(int acc) throws IOException, URISyntaxException, InterruptedException {
-        HttpResponse<String> response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[acc], keys[acc]), null);
-        if (response.statusCode() == 200) {
-            Block b = new ObjectMapper().readValue(response.body(), Block.class);
-            b = mineBlock(b);
-            return processRequest(REQUEST.PROPOSE_BLOCK, b, null);
-        }
-        return response;
-    }
-
-    public HttpResponse<String> getBalance(int acc) throws IOException, URISyntaxException, InterruptedException {
-        return processRequest(REQUEST.GET_BALANCE, accs[acc].getAccountId(), keys[acc]);
-    }
-
-    public HttpResponse<String> getLedger() throws IOException, URISyntaxException, InterruptedException {
-        return processRequest(REQUEST.GET_LEDGER, null, null);
-    }
-
-    public HttpResponse<String> getGlobal() throws IOException, URISyntaxException, InterruptedException {
-        return processRequest(REQUEST.GET_GLOBAL, null, null);
-    }
-
-    public HttpResponse<String> getTotal(int[] accnums) throws IOException, URISyntaxException, InterruptedException {
-        String[] accounts = new String[accnums.length];
-        for (int i = 0; i < accnums.length; i++) {
-            accounts[i] = accs[accnums[i]].getAccountId();
-        }
-        return processRequest(REQUEST.GET_TOTAL, accounts, null);
-    }
-
-    public HttpResponse<String> getExtract(int acc) throws IOException, URISyntaxException, InterruptedException {
-        return processRequest(REQUEST.GET_EXTRACT, accs[acc].getAccountId(), keys[acc]);
-    }
-
-    public void initBlockchain() throws IOException, URISyntaxException, InterruptedException {
-        requestMineAndProposeBlock(0);
-        for (int i = 1; i < MAX; i++) {
-            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 12.50), keys[0]);
-        }
-        requestMineAndProposeBlock(0);
-    }
-
-
-    public HttpResponse<String> sendTransaction(int acc, int destAcc, double amount, boolean async) throws IOException, URISyntaxException, InterruptedException {
-        if (async) return processRequest(REQUEST.SEND_ASYNC_TRANSACTION, new Transaction(accs[acc], accs[destAcc], amount), keys[acc]);
-        return processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[acc], accs[destAcc], amount), keys[acc]);
-    }
-
-    private enum REQUEST {
-        GET_BALANCE("/balance?accountId="),
-        GET_LEDGER("/ledger"),
-        GET_GLOBAL("/globalLedgerValue"),
-        GET_TOTAL("/totalValue"),
-        GET_EXTRACT("/extract?accountId="),
-        SEND_TRANSACTION("/sendTransaction?accountId="),
-        SEND_ASYNC_TRANSACTION("/sendAsyncTransaction?accountId="),
-        GET_BLOCK("/block"),
-        PROPOSE_BLOCK("/proposeBlock");
-
-        private final String url;
-
-        REQUEST(String s) {
-            this.url = s;
-        }
-
-        String getUrl() {
-            return url;
         }
     }
 
