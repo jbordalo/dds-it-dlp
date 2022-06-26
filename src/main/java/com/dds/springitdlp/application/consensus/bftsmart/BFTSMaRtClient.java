@@ -14,7 +14,6 @@ import java.util.concurrent.CompletableFuture;
 @Component
 public class BFTSMaRtClient implements PluggableConsensus {
     AsynchServiceProxy serviceProxy;
-    public final long TIMEOUT = 10;
 
     public BFTSMaRtClient() {
         this.serviceProxy = new AsynchServiceProxy(Integer.parseInt(System.getenv().get("REPLICA_ID")));

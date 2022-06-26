@@ -12,13 +12,12 @@ import java.util.logging.Logger;
 @ConditionalOnProperty(name = "blockmess.enabled")
 @Component
 public class BlockmessServer extends ApplicationInterface {
-
     private final Logger logger = Logger.getLogger(BlockmessServer.class.getName());
     private final LedgerHandler ledgerHandler;
 
     @Autowired
     public BlockmessServer(LedgerHandler ledgerHandler) {
-        super(new String[]{"port=" + System.getenv("BLOCKMESS_PORT")});
+        super(new String[]{"address=" + System.getenv("IP"), "port=" + System.getenv("BLOCKMESS_PORT")});
         this.ledgerHandler = ledgerHandler;
     }
 
