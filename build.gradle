@@ -57,6 +57,7 @@ task testClient(type: JavaExec) {
     mainClass = "com.dds.client.Client"
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
+    jvmArgs += "-ea"
     environment "KEYSTORE", "config/keystores/keyStore"
     environment "KEYSTORE_ALIAS", "dds"
     environment "KEYSTORE_PW", "ddsdds"

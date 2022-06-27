@@ -3,7 +3,10 @@ package com.dds.client;
 import com.dds.springitdlp.application.contracts.*;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
+import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
 import com.dds.springitdlp.application.entities.results.RegisterResult;
+import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
+import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
 import com.dds.springitdlp.cryptography.Cryptography;
@@ -48,26 +51,27 @@ public class Client {
     private static void initializeAccounts(KeyStore keyStore, String accData, String keystoreAlias, String keystoreAliasPassword) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {
         keys = new PrivateKey[MAX];
         accs = new Account[MAX];
-        int count;
+
         try {
             FileInputStream fi = new FileInputStream(accData);
             ObjectInputStream oi = new ObjectInputStream(fi);
             int saved = oi.readInt();
-            for (count = 0; count < saved && count < MAX; count++) {
+            for (int count = 0; count < saved && count < MAX; count++) {
                 accs[count] = (Account) oi.readObject();
                 keys[count] = (PrivateKey) oi.readObject();
             }
-        } catch (IOException | ClassNotFoundException e) {
-            count = 0;
+            oi.close();
+            fi.close();
+            return;
+        } catch (IOException | ClassNotFoundException ignored) {
         }
 
         MessageDigest hash = MessageDigest.getInstance("SHA-256");
         try {
-            FileOutputStream f = new FileOutputStream(accData);
+            FileOutputStream f = new FileOutputStream(accData, true);
             ObjectOutputStream o = new ObjectOutputStream(f);
-            o.writeInt(MAX);
-            for (int i = count; i < MAX; i++) {
-
+            for (int i = 0; i < MAX; i++) {
+                o.writeInt(MAX);
                 keys[i] = (PrivateKey) keyStore.getKey(keystoreAlias + i, keystoreAliasPassword.toCharArray());
                 String pubKey64 = Base64.encodeBase64URLSafeString(keyStore.getCertificate(keystoreAlias + i).getPublicKey().getEncoded());
                 String emailtime = i + "bacinta01@greatestemail.com" + System.currentTimeMillis() + new SecureRandom().nextInt();
@@ -194,6 +198,7 @@ public class Client {
                 return client.send(request, HttpResponse.BodyHandlers.ofString());
             }
             case ENDORSE -> {
+                reqUrl = ENDORSER_URL + REQUEST.getUrl();
                 HttpRequest request = buildSmartContractRequest(obj, reqUrl);
                 return client.send(request, HttpResponse.BodyHandlers.ofByteArray());
             }
@@ -321,7 +326,8 @@ public class Client {
         MAX = Integer.parseInt(defaultWhenNull(System.getenv("MAX_ACCS"), String.valueOf(MAX)));
         ENDORSER_URL = defaultWhenNull(System.getenv("ENDORSER_URL"), ENDORSER_URL);
         URL = defaultWhenNull(System.getenv("REPLICA_URL"), ENDORSER_URL);
-
+        double[] balances = new double[MAX];
+        int countT = 0;
         KeyStore keyStore = Cryptography.initializeKeystore(System.getenv("KEYSTORE"), System.getenv("KEYSTORE_PW"));
 
         initializeAccounts(keyStore, System.getenv("ACC_SAVE_FILE"), System.getenv("KEYSTORE_ALIAS"), System.getenv("KEYSTORE_PW"));
@@ -329,104 +335,170 @@ public class Client {
         testSmartContracts();
 
         // Try to mine the first block (blockchain could be empty)
-        System.out.println("Mining genesis");
+        System.out.println("Mining first block (genesis - if blockchain is empty)");
 
 
         HttpResponse<String> response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[0], keys[0]), null);
-        System.out.println(response.statusCode());
+        System.out.println("REQUEST FOR BLOCK: " + response.statusCode());
         if (response.statusCode() == 200) {
             Block b = new ObjectMapper().readValue(response.body(), Block.class);
             b = mineBlock(b);
-            System.out.println(processRequest(REQUEST.PROPOSE_BLOCK, b, null).statusCode());
+            System.out.println("PROPOSED BLOCK: " + processRequest(REQUEST.PROPOSE_BLOCK, b, null).statusCode());
+        }
+
+        System.out.println("Check balances: ");
+        for (int i = 0; i < MAX; i++) {
+            response = processRequest(REQUEST.GET_BALANCE, accs[i].getAccountId(), keys[i]);
+            assert response != null;
+            System.out.println(response.body());
+            balances[i] = Double.parseDouble(response.body());
+            System.out.println("acc " + i + " - " + accs[i].getAccountId());
+            assert balances[i] >= 0.0;
         }
 
         // Have the account that mined transfer money to more accounts
         // This creates money in some accounts for testing
         SmartContract smartContract = new BasicSmartContract();
+
         smartContract = endorse(smartContract);
 
         // We need to test if was accepted, depends on status code, check testContracts()
         RegisterResult res = registeredResponse(smartContract);
+        System.out.println("Non-malicious SM " + res);
+        assert (res.equals(RegisterResult.CONTRACT_REGISTERED));
 
         String smartContractUuid;
         // We also check for REGISTER / REJECTED
         if (res == RegisterResult.CONTRACT_REGISTERED) {
             smartContractUuid = smartContract.getUuid();
             // This one should pass
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 10.0, smartContractUuid), keys[0]).statusCode());
+            HttpResponse<String> sendT = processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 10.0, smartContractUuid), keys[0]);
+            assert sendT != null;
+            countT++;
+            balances[0] -= 10.0;
+            balances[1] += 10.0;
+            System.out.println("Sent transaction with the non-malicious SM - should pass: " + sendT.statusCode());
+            assert (sendT.statusCode() == 200);
             // This one should fail
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 8.5, smartContractUuid), keys[0]).statusCode());
+            sendT = processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 8.5, smartContractUuid), keys[0]);
+            assert sendT != null;
+            System.out.println("Sent transaction with the non-malicious SM - should fail: " + sendT.statusCode());
+            assert (sendT.statusCode() == 400);
         }
-
         // This one should fail
-        System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 8.5, "nada"), keys[0]).statusCode());
-        System.out.println("Doing a communist");
+        HttpResponse<String> sendT = processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[1], 8.5, "nada"), keys[0]);
+        assert sendT != null && (sendT.statusCode() == 400);
+        System.out.println("Sent transaction with a random string as a SM Uuid - should fail: " + sendT.statusCode());
+
         for (int i = 1; i < MAX; i++) {
-            // Doing 4 * 12.5 instead of 50 so we can add extra transactions and are able to mine a block
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 12.5), keys[0]).statusCode());
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 12.5), keys[0]).statusCode());
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 12.5), keys[0]).statusCode());
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 12.5), keys[0]).statusCode());
+            for (int j = 0; j < Block.MIN_TRANSACTIONS_BLOCK / MAX + 1; j++) {
+                response = processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 12.5), keys[0]);
+                assert response != null && response.statusCode() == 200;
+                countT++;
+                System.out.println("transaction status: " + response.statusCode());
+                balances[0] -= 12.5;
+                balances[i] += 12.5;
+            }
         }
 
         System.out.println("Mining new block");
 
         response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[0], keys[0]), null);
-        System.out.println(response.statusCode());
+        assert response != null && response.statusCode() == 200;
+        System.out.println("REQUEST FOR BLOCK " + response.statusCode());
         if (response.statusCode() == 200) {
             Block b = new ObjectMapper().readValue(response.body(), Block.class);
             b = mineBlock(b);
-            System.out.println(processRequest(REQUEST.PROPOSE_BLOCK, b, null).statusCode());
+            response = processRequest(REQUEST.PROPOSE_BLOCK, b, null);
+            assert response != null;
+            System.out.println("BLOCK PROPOSAL " + response.statusCode());
+            assert response.statusCode() == 200;
+            balances[0] += Transaction.MINING_REWARD;
+            countT -= Block.MIN_TRANSACTIONS_BLOCK;
         }
 
+        for (int i = 1; i < Block.MIN_TRANSACTIONS_BLOCK / (Block.MIN_TRANSACTIONS_BLOCK / MAX + 1) + 1 && i < MAX; i++) {
+            response = processRequest(REQUEST.GET_BALANCE, accs[i].getAccountId(), keys[i]);
+            System.out.println("status " + response.statusCode() + " balance " + balances[i] + " " + response.body());
+            assert response != null && response.statusCode() == 200 && balances[i] == Double.parseDouble(response.body());
+        }
+        response = processRequest(REQUEST.GET_TOTAL, new String[]{accs[1].getAccountId(), accs[2].getAccountId()}, null);
+        assert response != null && balances[1] + balances[2] == Double.parseDouble(response.body());
 
-        System.out.println(processRequest(REQUEST.GET_EXTRACT, accs[0].getAccountId(), keys[0]).body());
-
-        System.out.println("One for all");
         for (int i = 0; i < MAX; i++) {
             int aux = (i + 1) % MAX;
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[i], accs[aux], 10.0), keys[i]).statusCode());
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[i], accs[aux], 10.0), keys[i]).statusCode());
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[i], accs[aux], 10.0), keys[i]).statusCode());
+            System.out.println("4 x transaction from " + i + " to " + aux);
+            for (int j = 0; j < 3; j++) {
+                response = processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[i], accs[aux], 10.0), keys[i]);
+                assert response != null;
+                System.out.println(response.statusCode());
+                if (response.statusCode() == 200) countT++;
+            }
             Transaction transaction = new Transaction(accs[i], accs[aux], 10.0);
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, transaction, keys[i]).statusCode());
-            System.out.println("Failed transaction below:");
-            System.out.println(processRequest(REQUEST.SEND_TRANSACTION, transaction, keys[i]).statusCode());
+            response = processRequest(REQUEST.SEND_TRANSACTION, transaction, keys[i]);
+            assert response != null;
+            if (response.statusCode() == 200) countT++;
+            System.out.println(response.statusCode());
+            response = processRequest(REQUEST.SEND_TRANSACTION, transaction, keys[i]);
+            assert response != null;
+            System.out.println("repeated transaction: " + response.statusCode());
+            assert response.statusCode() >= 400;
         }
 
-        System.out.println(processRequest(REQUEST.GET_EXTRACT, accs[0].getAccountId(), keys[0]).body());
-
-        System.out.println(processRequest(REQUEST.GET_GLOBAL, null, null).body());
-
-        System.out.println(processRequest(REQUEST.GET_TOTAL, new String[]{accs[0].getAccountId(), accs[1].getAccountId()}, null).body());
-
-
-        System.out.println("One for all async");
         for (int i = 1; i < MAX; i++) {
-            HttpResponse resp = processRequest(REQUEST.SEND_ASYNC_TRANSACTION, new Transaction(accs[0], accs[i], 5.0), keys[0]);
-            System.out.println(resp.statusCode());
-            System.out.println(resp.body());
+            response = processRequest(REQUEST.SEND_ASYNC_TRANSACTION, new Transaction(accs[0], accs[i], 5.0), keys[0]);
+            assert response != null;
+            AsyncTransactionResult asynRes = new ObjectMapper().readValue(response.body(), AsyncTransactionResult.class);
+            TransactionResultStatus stats = asynRes.getResults().get(0).getResult();
+            System.out.println(stats);
+            assert i >= Block.MIN_TRANSACTIONS_BLOCK / (Block.MIN_TRANSACTIONS_BLOCK / MAX + 1) || asynRes.getResults().get(0).getResult().equals(TransactionResultStatus.OK_TRANSACTION);
+            if (stats.equals(TransactionResultStatus.OK_TRANSACTION)) countT++;
+            System.out.println(response.body());
         }
         System.out.println("Failed transaction below:");
-        HttpResponse resp = processRequest(REQUEST.SEND_ASYNC_TRANSACTION, new Transaction(accs[0], accs[1], 5000.0), keys[0]);
-        System.out.println(resp.statusCode());
-        System.out.println(resp.body());
+        response = processRequest(REQUEST.SEND_ASYNC_TRANSACTION, new Transaction(accs[0], accs[1], 5000.0), keys[0]);
+        assert response != null;
+        AsyncTransactionResult asynRes = new ObjectMapper().readValue(response.body(), AsyncTransactionResult.class);
+        System.out.println("Failed transaction " + asynRes.getResults().get(0).getResult());
+        assert asynRes.getResults().get(0).getResult().equals(TransactionResultStatus.FAILED_TRANSACTION);
+        System.out.println(response.body());
 
         System.out.println("Mining another block");
         response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[2], keys[2]), null);
+        assert response != null && response.statusCode() == 200;
         System.out.println(response.statusCode());
         if (response.statusCode() == 200) {
             Block b = new ObjectMapper().readValue(response.body(), Block.class);
             b = mineBlock(b);
-            processRequest(REQUEST.PROPOSE_BLOCK, b, null);
+            response = processRequest(REQUEST.PROPOSE_BLOCK, b, null);
+            assert response != null && response.statusCode() == 200;
+            balances[2] += Transaction.MINING_REWARD;
+            countT -= Block.MIN_TRANSACTIONS_BLOCK;
         }
 
-        System.out.println(processRequest(REQUEST.GET_LEDGER, null, null).body());
-
-        System.out.println("Final balances");
-        for (int i = 0; i < MAX; i++) {
-            System.out.println(processRequest(REQUEST.GET_BALANCE, accs[i].getAccountId(), keys[i]).body());
+        response = processRequest(REQUEST.GET_LEDGER, null, null);
+        Ledger l = new ObjectMapper().readValue(response.body(), Ledger.class);
+        assert l.getBlockchain().size() == 3;
+        System.out.println(response.body());
+        System.out.println("transaction count/ :" + countT);
+        for (int i = 0; i < countT / Block.MIN_TRANSACTIONS_BLOCK; i++) {
+            response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[0], keys[0]), null);
+            assert response != null && response.statusCode() == 200;
+            System.out.println("get block to mine " + response.statusCode());
+            if (response.statusCode() == 200) {
+                Block b = new ObjectMapper().readValue(response.body(), Block.class);
+                b = mineBlock(b);
+                response = processRequest(REQUEST.PROPOSE_BLOCK, b, null);
+                System.out.println("Propose block " + response.statusCode());
+                assert response != null && response.statusCode() == 200;
+                balances[0] += Transaction.MINING_REWARD;
+                countT -= Block.MIN_TRANSACTIONS_BLOCK;
+            }
         }
+        response = processRequest(REQUEST.GET_BLOCK, createBlockRequest(accs[0], keys[0]), null);
+        System.out.println("STATUS: " + response.statusCode());
+        assert response != null && response.statusCode() != 200;
+        System.out.println(response.statusCode());
     }
 
 
