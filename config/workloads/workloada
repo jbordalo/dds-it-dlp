@@ -23,10 +23,10 @@
 #   Request distribution: zipfian
 
 
-fieldcount=1
+fieldcount=2
 fieldlength=1024
 
-recordcount=20000
+recordcount=30
 operationcount=100
 workload=com.dds.client.DDSWorkload
 
@@ -37,14 +37,15 @@ readproportion=0.2
 updateproportion=0.1
 scanproportion=0
 
-
 requestdistribution=zipfian
-
+exportfile=workloada_bmess_15thread.txt
 #maxexecutiontime=30
 
 smart-initkey=1000
 
-maxaccounts=4
+threadcount=15
+
+maxaccounts=12
 replicaurl=https://localhost:8080
 toggleasync=false
 keystore=config/keystores/keyStore

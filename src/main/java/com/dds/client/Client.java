@@ -282,8 +282,17 @@ public class Client {
         requestMineAndProposeBlock(0);
         for (int i = 1; i < MAX; i++) {
             processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 12.50), keys[0]);
+            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 6.50), keys[0]);
         }
-        requestMineAndProposeBlock(0);
+        for (int i = 0; i < 2*MAX/Block.MIN_TRANSACTIONS_BLOCK; i++) {
+            requestMineAndProposeBlock(0);
+        }
+        for (int i = 1; i < MAX; i++) {
+            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 6.50), keys[0]);
+            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 4.50), keys[0]);
+            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 2.50), keys[0]);
+            processRequest(REQUEST.SEND_TRANSACTION, new Transaction(accs[0], accs[i], 2.50), keys[0]);
+        }
     }
 
     public HttpResponse<String> sendTransaction(int acc, int destAcc, double amount, boolean async) throws IOException, URISyntaxException, InterruptedException {
@@ -448,19 +457,26 @@ public class Client {
         for (int i = 1; i < MAX; i++) {
             response = processRequest(REQUEST.SEND_ASYNC_TRANSACTION, new Transaction(accs[0], accs[i], 5.0), keys[0]);
             assert response != null;
-            AsyncTransactionResult asynRes = new ObjectMapper().readValue(response.body(), AsyncTransactionResult.class);
-            TransactionResultStatus stats = asynRes.getResults().get(0).getResult();
-            System.out.println(stats);
-            assert i >= Block.MIN_TRANSACTIONS_BLOCK / (Block.MIN_TRANSACTIONS_BLOCK / MAX + 1) || asynRes.getResults().get(0).getResult().equals(TransactionResultStatus.OK_TRANSACTION);
-            if (stats.equals(TransactionResultStatus.OK_TRANSACTION)) countT++;
+            System.out.println(response.statusCode());
+            if(response.statusCode() != 408) {
+                AsyncTransactionResult asynRes = new ObjectMapper().readValue(response.body(), AsyncTransactionResult.class);
+                TransactionResultStatus stats = asynRes.getResults().get(0).getResult();
+                System.out.println(stats);
+                assert i >= Block.MIN_TRANSACTIONS_BLOCK / (Block.MIN_TRANSACTIONS_BLOCK / MAX + 1) || asynRes.getResults().get(0).getResult().equals(TransactionResultStatus.OK_TRANSACTION);
+                if (stats.equals(TransactionResultStatus.OK_TRANSACTION)) countT++;
+            } else {
+                countT++;
+            }
             System.out.println(response.body());
         }
         System.out.println("Failed transaction below:");
         response = processRequest(REQUEST.SEND_ASYNC_TRANSACTION, new Transaction(accs[0], accs[1], 5000.0), keys[0]);
         assert response != null;
-        AsyncTransactionResult asynRes = new ObjectMapper().readValue(response.body(), AsyncTransactionResult.class);
-        System.out.println("Failed transaction " + asynRes.getResults().get(0).getResult());
-        assert asynRes.getResults().get(0).getResult().equals(TransactionResultStatus.FAILED_TRANSACTION);
+        if(response.statusCode() == 200) {
+            AsyncTransactionResult asynRes = new ObjectMapper().readValue(response.body(), AsyncTransactionResult.class);
+            System.out.println("Failed transaction " + asynRes.getResults().get(0).getResult());
+            assert asynRes.getResults().get(0).getResult().equals(TransactionResultStatus.FAILED_TRANSACTION);
+        }
         System.out.println(response.body());
 
         System.out.println("Mining another block");
