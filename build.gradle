@@ -54,7 +54,7 @@ idea {
 }
 
 task testClient(type: JavaExec) {
-    mainClass = "com.dds.client.Client"
+    mainClass = "com.dds.client.TestClient"
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
     jvmArgs += "-ea"
