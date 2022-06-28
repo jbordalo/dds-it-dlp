@@ -43,8 +43,9 @@ public class InteractiveClient {
                     if (async) System.out.println(response.body());
                     break;
                 case "MINE", "M":
+                    long init = System.currentTimeMillis();
                     response = client.requestMineAndProposeBlock(Integer.parseInt(command[1]));
-                    System.out.println("MINING DONE: " + response.statusCode());
+                    System.out.println("MINING TIME " + (System.currentTimeMillis()-init) + " & status: " + response.statusCode());
                     break;
                 case "BALANCE", "B":
                     response = client.getBalance(Integer.parseInt(command[1]));
