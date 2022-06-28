@@ -1,4 +1,4 @@
-package com.dds.springitdlp.application.entities.results;
+package com.dds.springitdlp.application.results;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

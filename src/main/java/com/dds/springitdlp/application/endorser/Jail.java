@@ -1,4 +1,6 @@
-package com.dds.springitdlp.application.contracts;
+package com.dds.springitdlp.application.endorser;
+
+import com.dds.springitdlp.application.contracts.SmartContract;
 
 import java.security.AccessControlContext;
 import java.security.Permission;

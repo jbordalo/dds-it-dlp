@@ -1,8 +1,8 @@
 package com.dds.springitdlp.application.consensus.blockmess;
 
 import applicationInterface.ReplyListener;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
-import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
+import com.dds.springitdlp.application.results.TransactionResult;
+import com.dds.springitdlp.application.results.TransactionResultStatus;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 

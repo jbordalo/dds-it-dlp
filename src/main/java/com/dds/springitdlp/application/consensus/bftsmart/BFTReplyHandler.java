@@ -4,8 +4,8 @@ import bftsmart.communication.client.ReplyListener;
 import bftsmart.tom.AsynchServiceProxy;
 import bftsmart.tom.RequestContext;
 import bftsmart.tom.core.messages.TOMMessage;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
-import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
+import com.dds.springitdlp.application.results.TransactionResult;
+import com.dds.springitdlp.application.results.TransactionResultStatus;
 import lombok.RequiredArgsConstructor;
 
 import java.io.ByteArrayInputStream;

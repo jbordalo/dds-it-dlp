@@ -1,13 +1,13 @@
 package com.dds.springitdlp.rest.controllers;
 
 import com.dds.springitdlp.application.entities.Transaction;
-import com.dds.springitdlp.application.entities.results.AsyncTransactionResult;
-import com.dds.springitdlp.application.entities.results.ProposeResult;
-import com.dds.springitdlp.application.entities.results.RegisterResult;
-import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
 import com.dds.springitdlp.application.ledger.Ledger;
 import com.dds.springitdlp.application.ledger.block.Block;
 import com.dds.springitdlp.application.ledger.block.BlockRequest;
+import com.dds.springitdlp.application.results.AsyncTransactionResult;
+import com.dds.springitdlp.application.results.ProposeResult;
+import com.dds.springitdlp.application.results.RegisterResult;
+import com.dds.springitdlp.application.results.TransactionResultStatus;
 import com.dds.springitdlp.application.services.AppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

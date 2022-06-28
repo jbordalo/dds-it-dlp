@@ -1,7 +1,7 @@
 package com.dds.springitdlp.application.contracts;
 
 import com.dds.springitdlp.application.entities.Transaction;
-import com.dds.springitdlp.application.entities.results.TransactionResultStatus;
+import com.dds.springitdlp.application.results.TransactionResultStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

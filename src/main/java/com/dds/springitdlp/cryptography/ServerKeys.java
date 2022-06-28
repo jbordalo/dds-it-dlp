@@ -1,6 +1,5 @@
-package com.dds.springitdlp.application.ledger;
+package com.dds.springitdlp.cryptography;
 
-import com.dds.springitdlp.cryptography.Cryptography;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 

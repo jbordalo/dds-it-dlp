@@ -1,4 +1,4 @@
-package com.dds.springitdlp.dataPlane;
+package com.dds.springitdlp.dataPlane.redis;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

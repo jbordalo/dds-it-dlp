@@ -1,9 +1,10 @@
-package com.dds.springitdlp.application.contracts;
+package com.dds.springitdlp.application.endorser;
 
+import com.dds.springitdlp.application.contracts.SmartContract;
 import com.dds.springitdlp.application.entities.Account;
 import com.dds.springitdlp.application.entities.Transaction;
-import com.dds.springitdlp.application.ledger.ServerKeys;
 import com.dds.springitdlp.cryptography.Cryptography;
+import com.dds.springitdlp.cryptography.ServerKeys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

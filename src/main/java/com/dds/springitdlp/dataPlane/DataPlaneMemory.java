@@ -1,6 +1,8 @@
 package com.dds.springitdlp.dataPlane;
 
 import com.dds.springitdlp.application.ledger.Ledger;
+import com.dds.springitdlp.dataPlane.redis.SmartContractRegistry;
+import com.dds.springitdlp.dataPlane.redis.TransactionPool;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 

@@ -2,7 +2,7 @@ package com.dds.springitdlp.application.consensus.blockmess;
 
 import applicationInterface.ApplicationInterface;
 import com.dds.springitdlp.application.consensus.PluggableConsensus;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
+import com.dds.springitdlp.application.results.TransactionResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;

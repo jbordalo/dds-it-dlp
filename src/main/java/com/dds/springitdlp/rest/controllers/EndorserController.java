@@ -1,7 +1,7 @@
 package com.dds.springitdlp.rest.controllers;
 
-import com.dds.springitdlp.application.contracts.Endorser;
 import com.dds.springitdlp.application.contracts.SmartContract;
+import com.dds.springitdlp.application.endorser.Endorser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;

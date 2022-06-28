@@ -18,7 +18,7 @@ public class InteractiveClient {
         String keystore = System.getenv("KEYSTORE");
         String keystorePw = System.getenv("KEYSTORE_PW");
         String keystoreAlias = System.getenv("KEYSTORE_ALIAS");
-        String savedData =  System.getenv("ACC_SAVE_FILE");
+        String savedData = System.getenv("ACC_SAVE_FILE");
         if (in.readLine().equalsIgnoreCase("Y")) {
             client = new Client(keystore, keystorePw, keystoreAlias, savedData);
         } else {

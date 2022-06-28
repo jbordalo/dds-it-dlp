@@ -1,4 +1,4 @@
-package com.dds.springitdlp.dataPlane;
+package com.dds.springitdlp.dataPlane.redis;
 
 import com.dds.springitdlp.application.ledger.Ledger;
 import org.springframework.data.repository.CrudRepository;

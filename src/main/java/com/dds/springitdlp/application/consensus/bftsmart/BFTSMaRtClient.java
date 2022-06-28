@@ -3,7 +3,7 @@ package com.dds.springitdlp.application.consensus.bftsmart;
 import bftsmart.tom.AsynchServiceProxy;
 import bftsmart.tom.core.messages.TOMMessageType;
 import com.dds.springitdlp.application.consensus.PluggableConsensus;
-import com.dds.springitdlp.application.entities.results.TransactionResult;
+import com.dds.springitdlp.application.results.TransactionResult;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
