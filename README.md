@@ -8,58 +8,41 @@
 
 `cd dds-it-dlp`
 
-<br>
 
 ## Building
 
 `docker build -t jc/dds-it-dlp .`
 
+`docker build -f DockerfileEndorser -t jc/dds-it-dlp-endorser`
+
 or
 
 `./build.sh`
 
-<br>
-
 ## Running the servers
 
-```
-docker network remove dds-network
-docker network create -d bridge dds-network --subnet=172.26.0.0/16
-docker run -e "PORT=<PORT>" -e "REPLICA_ID=<REPLICA_ID>" --network=dds-network -p 8080:<PORT> --ip=<REPLICA_IP> -t jc/dds-it-dlp
-```
+### BFTSMaRt
+`docker-compose up`
 
-or
-
-`./run.sh`
-
-
-### Example run
-
-
-Building with provided script `build.sh`.
-
-`$ ./build.sh`
-
-Running with provided script `run.sh`.
-
-Launch 4 replicas.
-
-`$ ./run.sh`
-```
-docker network remove dds-network
-docker network create -d bridge dds-network --subnet=172.26.0.0/16
-gnome-terminal -- docker run -e "PORT=8080" -e "REPLICA_ID=0" --network=dds-network -p 8080:8080 --ip=172.26.0.2 -t jc/dds-it-dlp &
-gnome-terminal -- docker run -e "PORT=8081" -e "REPLICA_ID=1" --network=dds-network -p 8081:8081 --ip=172.26.0.3 -t jc/dds-it-dlp &
-gnome-terminal -- docker run -e "PORT=8082" -e "REPLICA_ID=2" --network=dds-network -p 8082:8082 --ip=172.26.0.4 -t jc/dds-it-dlp &
-gnome-terminal -- docker run -e "PORT=8083" -e "REPLICA_ID=3" --network=dds-network -p 8083:8083 --ip=172.26.0.5 -t jc/dds-it-dlp &
-```
+### Blockmess
+`docker-compose -f docker-compose-blockmess.yml up`
 
 ## Configuration
-The replica ip addresses and ids must match the file `config/hosts-docker.config`.
+The replica ip addresses and ids in `docker-compose.yml` must match the file `config/hosts-docker.config`.
 
-## Running the client
+The `contact` property in file `config/config-docker.properties` must match the ip address and port of the first replica. 
 
-`./gradlew :client`
+## Running the test client
+
+`./gradlew :testClient`
+
+## Running an interactive client
+
+`./gradlew :interactiveClient`
+
+## Running YCSB
+
+`./gradlew :benchmark --args="-t -db com.dds.client.YCSBClient -P config/workloads/workloada"`
 
 ## Authors
 

@@ -4,10 +4,12 @@ WORKDIR /home/gradle/src
 RUN gradle build -x test --no-daemon
 
 FROM openjdk:17
-ENV KEYSTORE_PASSWORD=dds-it-dlp
-ENV STORAGE_PATH=mnt/vol/
+ENV TLS_KEYSTORE_PASSWORD=dds-it-dlp
+ENV SERVER_KEYSTORE=config/keystores/serverKeystore SERVER_KEYSTORE_ALIAS=appservice SERVER_KEYSTORE_PW=ddsdds
+ENV ENDORSERS_KEYSTORE=config/keystores/publicEndorsersKeystore ENDORSERS_KEYSTORE_ALIAS=endorser ENDORSERS_KEYSTORE_PW=ddsdds
 COPY --from=build /home/gradle/src/build/libs/*.jar app.jar
 COPY config config
 COPY config/hosts-docker.config config/hosts.config
+COPY config/config-docker.properties config/config.properties
 RUN rm config/currentView; exit 0
 ENTRYPOINT ["java","-jar","/app.jar"]

@@ -1,26 +1,60 @@
 package com.dds.springitdlp.application.entities;
 
-import lombok.AllArgsConstructor;
+import com.dds.springitdlp.cryptography.Cryptography;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class Transaction implements Serializable {
 
-    public static final double INITIAL_VALUE = 100.0;
+    public static final double MINING_REWARD = 100.0;
 
+    private String uuid;
     private Account origin;
     private Account destination;
     private double amount;
-    private int nonce;
+    private long timestamp;
+    private String signature;
+    private String smartContractUuid;
 
-    public static Transaction SYS_INIT(Account account) {
-        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.INITIAL_VALUE, 0);
+    public Transaction(Account origin, Account destination, double amount) {
+        this(origin, destination, amount, null);
+    }
+
+    public Transaction(Account origin, Account destination, double amount, String smartContractUuid) {
+        this.uuid = UUID.randomUUID().toString();
+        this.origin = origin;
+        this.destination = destination;
+        this.amount = amount;
+        this.timestamp = System.currentTimeMillis();
+        this.smartContractUuid = smartContractUuid;
+    }
+
+    /**
+     * Special transaction for the reward miners get
+     *
+     * @param account - account that gets the reward
+     * @return reward Transaction
+     */
+    public static Transaction REWARD_TRANSACTION(Account account) {
+        return new Transaction(Account.SYSTEM_ACC(), account, Transaction.MINING_REWARD * 10);
+    }
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "uuid='" + uuid + '\'' +
+                ", origin=" + origin +
+                ", destination=" + destination +
+                ", amount=" + amount +
+                ", timestamp=" + timestamp +
+                ", smartContractUuid='" + smartContractUuid + '\'' +
+                '}';
     }
 
     @Override
@@ -28,11 +62,17 @@ public class Transaction implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Transaction that = (Transaction) o;
-        return nonce == that.nonce && origin.equals(that.origin) && destination.equals(that.destination);
+        return uuid.equals(that.uuid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(origin, destination, nonce);
+        return Objects.hash(uuid);
     }
+
+    public static boolean verify(Transaction transaction) {
+        String publicKey = transaction.getOrigin().getPubKey();
+        return Cryptography.verify(publicKey, transaction.toString(), transaction.getSignature());
+    }
+
 }
