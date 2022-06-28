@@ -6,4 +6,4 @@
 /build
 config/currentView
 mnt/vol
-*.txt
+accData.txt
