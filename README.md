@@ -42,7 +42,7 @@ The `contact` property in file `config/config-docker.properties` must match the 
 
 ## Running YCSB
 
-`./gradlew :benchmark --args="-P config/workloads/workloada"`
+`./gradlew :benchmark --args="-t -db com.dds.client.YCSBClient -P config/workloads/workloada"`
 
 ## Authors
 

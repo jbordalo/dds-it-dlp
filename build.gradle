@@ -79,7 +79,6 @@ task interactiveClient(type: JavaExec) {
 
 task benchmark(type: JavaExec) {
     mainClass = "site.ycsb.Client"
-    args "-t -db com.dds.client.YCSBClient"
     classpath = sourceSets.main.runtimeClasspath
 }
 
