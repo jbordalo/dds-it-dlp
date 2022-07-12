@@ -1,0 +1,26 @@
+version: '3.9'
+services:
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    network_mode: host
+  service:
+    image: jc/dds-it-dlp
+    depends_on:
+      - redis
+    environment:
+      - REDIS_PORT=40379
+      - REPLICA_ID=3
+      - PORT=40080
+      - SPRING_PROFILES_ACTIVE=service,redis-cloud,tls
+      - CONSENSUS=bftsmart
+    network_mode: host
+  bft:
+    image: jc/dds-it-dlp
+    depends_on:
+      - redis
+    environment:
+      - REDIS_PORT=40379
+      - REPLICA_ID=3
+      - SPRING_PROFILES_ACTIVE=bft,redis-cloud
+    network_mode: host
