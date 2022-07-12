@@ -58,12 +58,13 @@ task testClient(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
     jvmArgs += "-ea"
+	jvmArgs += "-Djdk.internal.httpclient.disableHostnameVerification=true"
     environment "KEYSTORE", "config/keystores/keyStore"
     environment "KEYSTORE_ALIAS", "dds"
     environment "KEYSTORE_PW", "ddsdds"
     environment "ACC_SAVE_FILE", "accData.txt"
-    environment "ENDORSER_URL", "https://localhost:8090"
-    environment "REPLICA_URL", "https://localhost:8081"
+    environment "ENDORSER_URL", "https://54.36.163.65:40090"
+    environment "REPLICA_URL", "https://54.36.163.65:40080"
     environment "MAX_ACCS", "4"
 }
 
