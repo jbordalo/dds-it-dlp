@@ -5,6 +5,13 @@ services:
     container_name: redis
     command: --port 40379
     network_mode: host
+  endorser:
+    image: jc/dds-it-dlp-endorser
+    network_mode: host
+    environment:
+      - ENDORSER_ID=0
+      - PORT=40090
+      - SPRING_PROFILES_ACTIVE=endorser,tls
   service:
     image: jc/dds-it-dlp
     depends_on:
