@@ -17,6 +17,7 @@ services:
       - CONSENSUS=bftsmart
     network_mode: host
   bft:
+    hostname: bft
     image: jc/dds-it-dlp
     depends_on:
       - redis
