@@ -58,7 +58,6 @@ task testClient(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
     jvmArgs += "-ea"
-	jvmArgs += "-Djdk.internal.httpclient.disableHostnameVerification=true"
     environment "KEYSTORE", "config/keystores/keyStore"
     environment "KEYSTORE_ALIAS", "dds"
     environment "KEYSTORE_PW", "ddsdds"
@@ -87,4 +86,5 @@ tasks.withType(JavaExec) {
     jvmArgs += "-Djavax.net.ssl.trustStore=config/certificates/keystore"
     jvmArgs += "-Djavax.net.ssl.trustStorePassword=keystorePass"
     jvmArgs += "-Dhttps.protocols=TLSv1.3"
+	jvmArgs += "-Djdk.internal.httpclient.disableHostnameVerification=true"
 }
