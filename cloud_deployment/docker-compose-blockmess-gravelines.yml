@@ -1,0 +1,27 @@
+version: '3.9'
+services:
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    command: --port 40379
+    network_mode: host
+  endorser:
+    image: jc/dds-it-dlp-endorser
+    environment:
+      - ENDORSER_ID=3
+      - PORT=40090
+      - SPRING_PROFILES_ACTIVE=endorser,tls
+    network_mode: host
+  service:
+    image: jc/dds-it-dlp
+    depends_on:
+      - redis
+    environment:
+      - REDIS_PORT=40379
+      - REPLICA_ID=3
+      - PORT=40080
+      - SPRING_PROFILES_ACTIVE=service,redis-cloud,tls,blockmess
+      - CONSENSUS=blockmess
+      - BLOCKMESS_PORT=40010
+      - IP=54.38.65.236
+    network_mode: host
